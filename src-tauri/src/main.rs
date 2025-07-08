@@ -3,7 +3,7 @@
     all(not(debug_assertions), target_os = "windows"),
     windows_subsystem = "windows"
 )]
-#![allow(warnings)]
+#![allow(warnings)] //turn off warnings
 
 mod wordnet_v2;
 use wordnet_v2::{initialize_wordnet_index, search_words};
