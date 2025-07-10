@@ -1,0 +1,117 @@
+:root{
+    /* colors */
+    --l:#FFFFFF;
+    --g1:#BBBBBB;
+    --g2:#8F8F8F;
+    --g3:#626262;
+    --g4:#4C4C4C;
+    --g5:#2A2A2A;
+    --d:#1d1d1d;
+
+    /* spacing */
+    --s-03: 4px;
+    --s-02: 5px;
+    --s-01: 7px;
+    --s-0: 10px;
+    --s-1: 14px;
+    --s-2: 20px;
+    --s-3: 28px;
+    --s-4: 40px;
+    --s-5: 57px;
+}
+
+/* Regular font */
+@font-face {
+    font-family: 'Inter';
+    src: url('./inter/Inter-VariableFont_opsz\,wght.ttf') format('truetype');
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+}
+/* Italic font */
+@font-face {
+    font-family: 'Inter';
+    src: url('./inter/Inter-Italic-VariableFont_opsz\,wght.ttf') format('truetype');
+    font-style: italic;
+    font-weight: 100 900;
+    font-display: swap;
+}
+
+html, body{
+    margin: 0;
+    padding: 0;
+    width: 100lvw;
+    height: 100lvh;
+
+    color: var(--l);
+    color-scheme: dark;
+}
+html *{
+    margin: 0;
+    padding: 0;
+    border: none;
+    outline: none;
+
+    transition: 120ms ease-in-out;
+}
+html[theme="light"]{
+    color-scheme: light;
+    filter: invert(1);
+}
+html[theme="light"] body{
+    background-color: #000;
+}
+body{
+    --p: var(--s-2);
+    --size: calc(100% - (2 * var(--p)));
+    width: var(--size);
+    height: var(--size);
+    padding: var(--p);
+
+    background-color: var(--d);
+    /* background: rgba(29, 29, 29, 0.6); */
+}
+h1, h2, h3, h4, h5, p, a, small, input{
+    font-family: 'Inter', Arial, Helvetica, sans-serif;
+    font-weight: 400;
+    font-style: normal;
+}
+h1{font-size: var(--s-3);font-weight: 600;}
+h2{font-size: var(--s-1);font-weight: 400;color: var(--g2);}
+p{font-size: var(--s-1);}
+small{font-size: var(--s-0); color: var(--g2);}
+a{font-size: var(--s-1); color: var(--g2);text-decoration:none; font-weight: 400; font-style: italic;}
+a:hover{
+    cursor: pointer;
+    color: var(--l);
+    text-decoration: underline;
+}
+button:hover{
+    cursor: pointer;
+}
+
+::-webkit-scrollbar,
+::-webkit-scrollbar-track {
+    width: var(--s-03);
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background-color: var(--g2);
+    border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+    cursor: pointer;
+    background-color: var(--g1);
+}
+::-webkit-resizer,
+::-webkit-scrollbar-corner,
+::-webkit-scrollbar-button {
+    display: none;
+    visibility: hidden;
+    appearance: none;
+}
+
+::selection {
+    color: var(--d);
+    background-color: var(--l);
+}

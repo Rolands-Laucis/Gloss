@@ -1,0 +1,15 @@
+$primary-color: #3498db;
+$secondary-color: #2ecc71;
+$font-stack: 'Helvetica, Arial, sans-serif';
+
+@mixin flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@mixin box-shadow($color: rgba(0, 0, 0, 0.2)) {
+  box-shadow: 0 4px 6px $color;
+}
+
+$acc: #ffff00;

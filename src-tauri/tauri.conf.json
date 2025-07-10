@@ -12,9 +12,18 @@
   "app": {
     "windows": [
       {
-        "title": "gloss",
-        "width": 800,
-        "height": 600
+        "title": "Gloss",
+        "width": 600,
+        "height": 338,
+        "fullscreen": false,
+        "resizable": true,
+        "maximized": false,
+        "focus": true,
+        "minimizable": true,
+        "transparent": false,
+        "decorations": true,
+        "visible": true,
+        "center": true
       }
     ],
     "security": {
