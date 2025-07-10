@@ -1,17 +1,33 @@
 <script>
   import { invoke } from "@tauri-apps/api/core";
 
-  let search = $state("Lexicon"),
-    dark_mode = true; //Lexicon
+  let search = $state("Lexicon"), suggestions = $state([]);//Lexicon
+  let dark_mode = true; 
 
   async function Query(input = "") {
     const res = await invoke("search_words", {
       query: input,
-      limit: 3,
+      limit: 10,
     });
+    suggestions = Array.from(new Set(res.map(e => e.word)));
 
-    console.log(res);
-    return res;
+    const entries = [];
+    for(const e of res){
+      const existing = entries.find((entry) => e.word === entry.word);
+      if (existing) {
+        existing.senses.push(e);
+        // existing.senses[existing.senses.length - 1].definition = `${existing.senses.length}. ` + existing.senses[existing.senses.length - 1].definition;
+      } else {
+        // e.definition = '1. ' + e.definition;
+        entries.push({
+          word:e.word,
+          senses: [e]
+        });
+      }
+    }
+
+    // console.log(entries);
+    return entries;
   }
 
   function ChangeTheme() {
@@ -34,8 +50,14 @@
       type="text"
       name="search"
       placeholder="search..."
+      list="suggestions"
       bind:value={search}
     />
+    <datalist id="suggestions">
+      {#each suggestions as s}
+        <option value={s}>
+      {/each}
+    </datalist>
     <button on:click={ChangeTheme}></button>
   </nav>
 
@@ -48,43 +70,32 @@
           <article>
             <h1 class="word">{s(e.word)}</h1>
 
-            <section>
-              <small>{e.pos}</small>
-              <p>{e.definition}</p>
-              {#if e.example}
-                <p class="example">“{e.example}”</p>
-              {/if}
-            </section>
+            {#each e.senses as sense}
+              <section>
+                <small>{sense.pos} ~{sense.score}</small>
+                <p>{sense.definition}</p>
+                {#if sense.example}
+                  <p class="example">“{sense.example}”</p>
+                {/if}
+              </section>
 
-            <section>
-              {#if e.synonyms.length}
-                <h2>synonyms</h2>
-                <div class="word_list">
-                  {#each e.synonyms as syn}
-                    <!-- svelte-ignore a11y_click_events_have_key_events -->
-                    <!-- svelte-ignore a11y_no_static_element_interactions -->
-                    <!-- svelte-ignore a11y_missing_attribute -->
-                    <!-- svelte-ignore event_directive_deprecated -->
-                    <a on:click|preventDefault={() => (search = syn)}
-                      >{s(syn)}</a
-                    >
-                  {/each}
-                </div>
-              {/if}
-
-              {#if e.antonyms.length}
-                <h2>antonyms</h2>
-                <div class="word_list">
-                  {#each e.antonyms as ant}
-                    <!-- svelte-ignore a11y_click_events_have_key_events -->
-                    <!-- svelte-ignore a11y_no_static_element_interactions -->
-                    <!-- svelte-ignore a11y_missing_attribute -->
-                    <!-- svelte-ignore event_directive_deprecated -->
-                    <a on:click|preventDefault={() => (search = ant)}>{ant}</a>
-                  {/each}
-                </div>
-              {/if}
-            </section>
+              <section>
+                {#if sense.synonyms.length}
+                  <h2>synonyms</h2>
+                  <div class="word_list">
+                    {#each sense.synonyms as syn}
+                      <!-- svelte-ignore a11y_click_events_have_key_events -->
+                      <!-- svelte-ignore a11y_no_static_element_interactions -->
+                      <!-- svelte-ignore a11y_missing_attribute -->
+                      <!-- svelte-ignore event_directive_deprecated -->
+                      <a on:click|preventDefault={() => (search = syn)}
+                        >{s(syn)}</a
+                      >
+                    {/each}
+                  </div>
+                {/if}
+              </section>
+            {/each}
           </article>
         {/each}
       {:catch error}
