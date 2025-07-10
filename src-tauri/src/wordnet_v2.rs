@@ -63,7 +63,6 @@ pub struct WordEntry {
     pub definition: String,
     pub pos: String,
     pub synonyms: Vec<String>,
-    pub antonyms: Vec<String>,
     pub example: Option<String>,
     pub score: i64, // Add score field
 }
@@ -128,19 +127,12 @@ fn pos_code_to_full(pos: &str) -> String {
 fn extract_relations(
     synset: &Synset,
     wordnet: &WordNet,
-) -> (Vec<String>, Vec<String>) {
+) -> Vec<String> {
     let mut synonyms = Vec::new();
-    let mut antonyms = Vec::new();
 
     if let Some(pointers) = &synset.pointer {
         for pointer in pointers {
             match pointer.symbol.as_str() {
-                "!" => {
-                    // Antonym relation
-                    if let Some(target_synset) = wordnet.synset.get(&pointer.synset) {
-                        antonyms.extend(target_synset.word.clone());
-                    }
-                }
                 "~" | "@" | "^" | "=" => {
                     // Various synonym-like relations (hypernym, hyponym, etc.)
                     if let Some(target_synset) = wordnet.synset.get(&pointer.synset) {
@@ -162,10 +154,8 @@ fn extract_relations(
     // Remove duplicates
     synonyms.sort();
     synonyms.dedup();
-    antonyms.sort();
-    antonyms.dedup();
 
-    (synonyms, antonyms)
+    synonyms
 }
 
 // Extract example sentence
@@ -199,11 +189,16 @@ fn build_index(wordnet: WordNet) -> FuzzySearchIndex {
     let mut index = FuzzySearchIndex::new();
 
     for (synset_id, synset) in &wordnet.synset {
-        let (synonyms, antonyms) = extract_relations(synset, &wordnet);
+        let synonyms = extract_relations(synset, &wordnet);
         let example = extract_example(synset, &wordnet);
         let pos_full = pos_code_to_full(&synset.pos);
 
         for word in &synset.word {
+            // Skip words with more than one space character
+            if word.chars().filter(|&c| c == '_').count() > 1 {
+                continue;
+            }
+
             // Clean word (remove POS tags if present)
             let clean_word = word.split('.').next().unwrap_or(word).to_string();
             
@@ -219,7 +214,6 @@ fn build_index(wordnet: WordNet) -> FuzzySearchIndex {
                 definition: synset.gloss.clone(),
                 pos: pos_full.clone(),
                 synonyms: filtered_synonyms,
-                antonyms: antonyms.clone(),
                 example: example.clone(),
                 score: 0, // Initialize score
             };
@@ -319,14 +313,3 @@ mod tests {
 pub fn get_all_entries() -> Option<Vec<WordEntry>> {
     WORDNET_INDEX.get().map(|index| index.get_all_entries().clone())
 }
-
-// This file would be saved as src/wordnet_search.rs or src/lib.rs
-
-// Add this to your Cargo.toml dependencies:
-/*
-[dependencies]
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-fuzzy-matcher = "0.3"
-tauri = { version = "1.0", features = ["api-all"] }
-*/

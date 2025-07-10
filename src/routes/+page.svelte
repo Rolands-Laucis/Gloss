@@ -1,7 +1,7 @@
 <script>
   import { invoke } from "@tauri-apps/api/core";
 
-  let search = $state("Lexicon"), suggestions = $state([]);//Lexicon
+  let search = $state("cop"), suggestions = $state([]);//Lexicon
   let dark_mode = true; 
 
   async function Query(input = "") {
@@ -13,6 +13,10 @@
 
     const entries = [];
     for(const e of res){
+      if(e.score < 60) continue;
+
+      e.synonyms = e.synonyms.filter(s => (s.match(/_/g) || []).length < 2).map(s => s.replace("_", " "));
+      
       const existing = entries.find((entry) => e.word === entry.word);
       if (existing) {
         existing.senses.push(e);
@@ -47,17 +51,24 @@
   <nav>
     <input
       autofocus
+      autocapitalize="off"
+      autocorrect="on"
+      autocomplete="on"
       type="text"
       name="search"
       placeholder="search..."
       list="suggestions"
       bind:value={search}
     />
-    <datalist id="suggestions">
+
+    <datalist id="suggestions" hidden>
       {#each suggestions as s}
-        <option value={s}>
+        {#if s !== search}
+          <option value={s}></option>
+        {/if}
       {/each}
     </datalist>
+
     <button on:click={ChangeTheme}></button>
   </nav>
 
@@ -89,14 +100,17 @@
                       <!-- svelte-ignore a11y_missing_attribute -->
                       <!-- svelte-ignore event_directive_deprecated -->
                       <a on:click|preventDefault={() => (search = syn)}
-                        >{s(syn)}</a
+                        >{syn}</a
                       >
                     {/each}
                   </div>
                 {/if}
               </section>
             {/each}
+
+            <div class="line"></div>
           </article>
+
         {/each}
       {:catch error}
         <li>Error: {error}</li>
@@ -144,7 +158,7 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    gap: var(--s-5);
+    gap: var(--s-3);
     padding-bottom: var(--s-4);
 
     overflow-y: auto;
@@ -163,7 +177,7 @@
     margin-bottom: var(--s-1);
   }
   article > h1 {
-    margin-bottom: var(--s-02) !important;
+    margin-bottom: var(--s-0) !important;
   }
   .word {
     margin-bottom: var(--s-03);
@@ -195,5 +209,10 @@
   }
   .word_list a:not(:last-child)::after {
     content: ",";
+  }
+  .line{
+    height: 1px;
+    width: 100%;
+    background: var(--g5);
   }
 </style>
