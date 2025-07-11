@@ -7,7 +7,7 @@
   async function Query(input = "") {
     const res = await invoke("search_words", {
       query: input,
-      limit: 10,
+      limit: 15,
     });
     suggestions = Array.from(new Set(res.map(e => e.word)));
 
@@ -30,7 +30,9 @@
     }
 
     entries.sort((a, b) => {
-      if(a.word === search) return -1;
+      //exact match first
+      if(a.word === search) return -1; 
+      else if(b.word === search) return 1;
 
       // Sort by space count (ascending)
       const spaceCountA = (a.word.match(/ /g) || []).length;
@@ -58,10 +60,6 @@
       "theme",
       dark_mode === true ? "dark" : "light",
     );
-  }
-
-  function s(t = "") {
-    return t.replaceAll("_", " ");
   }
 </script>
 
