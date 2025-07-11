@@ -45,6 +45,7 @@ html, body{
 
     color: var(--l);
     color-scheme: dark;
+    background: transparent;
 }
 html *{
     margin: 0;
@@ -68,8 +69,8 @@ body{
     height: var(--size);
     padding: var(--p);
 
-    background-color: var(--d);
-    /* background: rgba(29, 29, 29, 0.6); */
+    /* background-color: var(--d); */
+    background: rgba(29, 29, 29, 0.8);
 }
 h1, h2, h3, h4, h5, p, a, small, input{
     font-family: 'Inter', Arial, Helvetica, sans-serif;

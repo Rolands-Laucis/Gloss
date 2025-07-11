@@ -13,17 +13,22 @@
     "windows": [
       {
         "title": "Gloss",
-        "width": 600,
-        "height": 450,
+        "width": 420,
+        "height": 600,
         "fullscreen": false,
         "resizable": true,
         "maximized": false,
         "focus": true,
         "minimizable": true,
-        "transparent": false,
+        "transparent": true,
         "decorations": true,
         "visible": true,
-        "center": true
+        "center": true,
+        "windowEffects": {
+          "effects": [
+            "acrylic"
+          ]
+        }
       }
     ],
     "security": {

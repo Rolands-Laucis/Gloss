@@ -159,7 +159,7 @@
 
     background: transparent;
     border-radius: 4px;
-    border: 2px solid #232323;
+    border: 2px solid var(--g4);
   }
   nav > button {
     height: var(--s-3);
