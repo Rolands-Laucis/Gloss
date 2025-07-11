@@ -1,7 +1,7 @@
 <script>
   import { invoke } from "@tauri-apps/api/core";
 
-  let search = $state("cop"), suggestions = $state([]);//Lexicon
+  let search = $state("copper"), suggestions = $state([]);//Lexicon
   let dark_mode = true; 
 
   async function Query(input = "") {
@@ -12,25 +12,43 @@
     suggestions = Array.from(new Set(res.map(e => e.word)));
 
     const entries = [];
-    for(const e of res){
-      if(e.score < 60) continue;
+    for (const e of res) {
+      if (e.score < 60) continue;
 
+      e.word = e.word.replaceAll("_", " ");
       e.synonyms = e.synonyms.filter(s => (s.match(/_/g) || []).length < 2).map(s => s.replace("_", " "));
       
       const existing = entries.find((entry) => e.word === entry.word);
       if (existing) {
         existing.senses.push(e);
-        // existing.senses[existing.senses.length - 1].definition = `${existing.senses.length}. ` + existing.senses[existing.senses.length - 1].definition;
       } else {
-        // e.definition = '1. ' + e.definition;
         entries.push({
-          word:e.word,
+          word: e.word,
           senses: [e]
         });
       }
     }
 
-    // console.log(entries);
+    entries.sort((a, b) => {
+      if(a.word === search) return -1;
+
+      // Sort by space count (ascending)
+      const spaceCountA = (a.word.match(/ /g) || []).length;
+      const spaceCountB = (b.word.match(/ /g) || []).length;
+      console.log(a.word, spaceCountA, b.word, spaceCountB);
+      if (spaceCountA !== spaceCountB) 
+        return spaceCountA > spaceCountB ? 1 : -1; 
+
+      // Sort by score (descending)
+      const maxScoreA = Math.max(...a.senses.map(s => s.score));
+      const maxScoreB = Math.max(...b.senses.map(s => s.score));
+      if(maxScoreA !== maxScoreB)
+        return maxScoreB > maxScoreA ? 1 : -1; 
+
+      // otherwise alphabetically
+      return b.word.localeCompare(a.word);
+    });
+
     return entries;
   }
 
@@ -79,7 +97,7 @@
       {:then entries}
         {#each entries as e}
           <article>
-            <h1 class="word">{s(e.word)}</h1>
+            <h1 class="word">{e.word}</h1>
 
             {#each e.senses as sense}
               <section>
@@ -92,7 +110,7 @@
 
               <section>
                 {#if sense.synonyms.length}
-                  <h2>synonyms</h2>
+                  <!-- <h2>synonyms</h2> -->
                   <div class="word_list">
                     {#each sense.synonyms as syn}
                       <!-- svelte-ignore a11y_click_events_have_key_events -->
