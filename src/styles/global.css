@@ -23,7 +23,7 @@
 /* Regular font */
 @font-face {
     font-family: 'Inter';
-    src: url('./inter/Inter-VariableFont_opsz\,wght.ttf') format('truetype');
+    src: local('Inter'), url(./inter/Inter.ttf) format('truetype');
     font-style: normal;
     font-weight: 100 900;
     font-display: swap;
@@ -31,7 +31,7 @@
 /* Italic font */
 @font-face {
     font-family: 'Inter';
-    src: url('./inter/Inter-Italic-VariableFont_opsz\,wght.ttf') format('truetype');
+    src: url(./inter/Inter-Italic.ttf) format('truetype');
     font-style: italic;
     font-weight: 100 900;
     font-display: swap;

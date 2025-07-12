@@ -25,7 +25,7 @@
         if(e.key === 'Enter' && e.target === search_box){
             search_box?.blur();
             recents = Array.from(new Set([e.target.value, ...recents]));
-            if(recents.length > 25) recents.length = 25;
+            if(recents.length > 25) recents.length = 200;
             localStorage.setItem("recents", JSON.stringify(recents));
             // console.log({recents});
         }
@@ -217,7 +217,7 @@
 
                 <article class="half">
                     <h1 style="margin-bottom: var(--s-03);">Recents</h1>
-                    {#each recents.toSorted() as recent}
+                    {#each recents as recent}
                         {@const starred = stars.includes(recent)}
                         <div class="horiz">
                             <!-- svelte-ignore a11y_click_events_have_key_events -->
