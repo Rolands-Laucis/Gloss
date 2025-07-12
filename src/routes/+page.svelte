@@ -122,11 +122,14 @@
             bind:value={search}
         />
 
-        <datalist id="suggestions" hidden>
-            {#each suggestions as s}
-                <option value={s}></option>
-            {/each}
-        </datalist>
+        <!-- dont show if its just 1 word which is the search word -->
+        {#if !(suggestions.length == 1 && suggestions[0] === search)}
+            <datalist id="suggestions" hidden>
+                {#each suggestions as s}
+                    <option value={s}></option>
+                {/each}
+            </datalist>
+        {/if}
 
         <button on:click={ChangeTheme}>
             <Icon fill={1} inert size={20} style="color: var(--d);">
