@@ -30,7 +30,8 @@
             localStorage.setItem("recents", JSON.stringify(recents));
             // console.log({recents});
         }
-        else if(e.key === 'Tab' && e.target !== search_box){
+        // else if(e.key === 'Tab' && e.target !== search_box){
+        else if(e.key === 'f' && e.ctrlKey === true && e.target !== search_box){
             e.preventDefault();
             search_box?.focus();
         }else if(e.key === 'w' && e.ctrlKey === true){
@@ -157,6 +158,8 @@
                                 fill={starred ? 1 : 0}
                                 wgth={starred ? 400 : 200}
                                 size={28}
+                                tabindex=0
+                                title="Favorite this word"
                                 on:click={() => {
                                     Star(e.word);
                                 }}
@@ -214,6 +217,8 @@
                                 wgth={400}
                                 size={14}
                                 style="color: var(--g3)"
+                                title="Favorite this word"
+                                tabindex=0
                                 on:click={() => {Star(star)}}
                                 >star
                             </Icon>
@@ -236,6 +241,8 @@
                                 wgth={400}
                                 size={14}
                                 style="color: var(--g3)"
+                                title="Favorite this word"
+                                tabindex=0
                                 on:click={() => {Star(recent)}}
                                 >star
                             </Icon>
@@ -271,6 +278,9 @@
         border-radius: 4px;
         border: 2px solid var(--g4);
     }
+    input:hover, input:focus{
+        border: 2px solid var(--g3);
+    }
     nav > button {
         height: var(--s-3);
         aspect-ratio: 1 / 1;
@@ -279,6 +289,10 @@
     }
     nav > button:hover {
         background-color: var(--l);
+    }
+    nav > button:focus{
+        outline: 1px solid var(--l);
+        border-radius: var(--s-03);
     }
     aside {
         width: 100%;
