@@ -1,6 +1,7 @@
 <script>
-    import { invoke } from "@tauri-apps/api/core";
     import { onMount } from "svelte";
+    import { invoke } from "@tauri-apps/api/core";
+    import { getCurrentWindow } from "@tauri-apps/api/window";
 
     import Icon from "./Icon.svelte";
 
@@ -32,6 +33,8 @@
         else if(e.key === 'Tab' && e.target !== search_box){
             e.preventDefault();
             search_box?.focus();
+        }else if(e.key === 'w' && e.ctrlKey === true){
+            getCurrentWindow().close();
         }
     }
 
@@ -82,7 +85,7 @@
             return b.word.localeCompare(a.word);
         });
 
-        suggestions = Array.from(new Set(entries.map(e => e.word))); //.filter(w => w !== search)
+        suggestions = [...new Set(entries.map(e => e.word))]; //.filter(w => w !== search)
 
         return entries;
     }
