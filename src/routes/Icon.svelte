@@ -34,8 +34,8 @@
             filter: brightness(1.5);
         }
         &:focus{
-            outline: 2px solid var(--l);
-            border-radius: var(--s-03);
+            outline: 2px solid $l;
+            border-radius: $s-03;
         }
         &:is(.hover_fill):hover{
             --f: var(--f_h) !important;

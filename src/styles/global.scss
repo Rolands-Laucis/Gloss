@@ -1,15 +1,186 @@
-$primary-color: #3498db;
-$secondary-color: #2ecc71;
-$font-stack: 'Helvetica, Arial, sans-serif';
+@use './variables' as *;
 
-@mixin flex-center {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+:root {
+    --l: #{$l};
+    --g1: #{$g1};
+    --g2: #{$g2};
+    --g3: #{$g3};
+    --g4: #{$g4};
+    --g5: #{$g5};
+    --d: #{$d};
+
+    --s-03: #{$s-03};
+    --s-02: #{$s-02};
+    --s-01: #{$s-01};
+    --s-0: #{$s-0};
+    --s-1: #{$s-1};
+    --s-2: #{$s-2};
+    --s-3: #{$s-3};
+    --s-4: #{$s-4};
+    --s-5: #{$s-5};
 }
 
-@mixin box-shadow($color: rgba(0, 0, 0, 0.2)) {
-  box-shadow: 0 4px 6px $color;
+/* Regular font */
+@font-face {
+    font-family: 'Inter';
+    src: local('Inter'), url(./inter/Inter.ttf) format('truetype');
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
 }
 
-$acc: #ffff00;
+/* Italic font */
+@font-face {
+    font-family: 'Inter';
+    src: url(./inter/Inter-Italic.ttf) format('truetype');
+    font-style: italic;
+    font-weight: 100 900;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Material Symbols Rounded';
+    src: url(./MaterialSymbolsRounded.woff2) format('woff2');
+}
+
+.material-symbols-round {
+    font-family: 'Material Symbols Rounded' !important;
+    font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 48;
+    font-size: 18px;
+
+    /* Preferred icon size */
+    display: inline-block;
+    line-height: 1;
+    text-transform: none;
+    letter-spacing: normal;
+    word-wrap: normal;
+    white-space: nowrap;
+    direction: ltr;
+
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: 'liga';
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    width: 100lvw;
+    height: 100lvh;
+
+    color: var(--l);
+    color-scheme: dark;
+    background: transparent;
+}
+
+html * {
+    margin: 0;
+    padding: 0;
+    border: none;
+    outline: none;
+
+    transition: 120ms ease-in-out;
+}
+
+html[theme="light"] {
+    color-scheme: light;
+    filter: invert(1);
+
+    & body {
+        background-color: #000;
+    }
+}
+
+body {
+    --p: var(--s-2);
+    --size: calc(100% - (2 * var(--p)));
+    width: var(--size);
+    height: var(--size);
+    padding: var(--p);
+
+    /* background-color: var(--d); */
+    background: rgba(29, 29, 29, 0.8);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+p,
+a,
+small,
+input {
+    font-family: 'Inter', Arial, Helvetica, sans-serif;
+    font-weight: 400;
+    font-style: normal;
+}
+
+h1 {
+    font-size: var(--s-3);
+    font-weight: 600;
+}
+
+h2 {
+    font-size: var(--s-1);
+    font-weight: 400;
+    color: var(--g2);
+}
+
+p {
+    font-size: var(--s-1);
+}
+
+small {
+    font-size: var(--s-0);
+    color: var(--g2);
+}
+
+a {
+    font-size: var(--s-1);
+    color: $g2;
+    text-decoration: none;
+    font-weight: 400;
+    font-style: italic;
+
+    &:hover {
+        cursor: pointer;
+        color: var(--l);
+        text-decoration: underline;
+    }
+}
+
+button:hover {
+    cursor: pointer;
+}
+
+::-webkit-scrollbar,
+::-webkit-scrollbar-track {
+    width: var(--s-03);
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: var(--g2);
+    border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    cursor: pointer;
+    background-color: var(--g1);
+}
+
+::-webkit-resizer,
+::-webkit-scrollbar-corner,
+::-webkit-scrollbar-button {
+    display: none;
+    visibility: hidden;
+    appearance: none;
+}
+
+::selection {
+    color: var(--d);
+    background-color: var(--l);
+}

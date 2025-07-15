@@ -254,7 +254,7 @@
     </aside>
 </main>
 
-<style lang="css">
+<style lang="scss">
     main {
         width: 100%;
         height: 100%;
@@ -266,35 +266,35 @@
     }
     nav {
         display: flex;
-        gap: var(--s-1);
+        gap: $s-1;
         align-items: center;
-        margin-bottom: var(--s-1);
+        margin-bottom: $s-1;
 
         & > button {
-            height: var(--s-3);
+            height: $s-3;
             aspect-ratio: 1 / 1;
-            background: var(--g1);
+            background: $g1;
             border-radius: 2px;
 
             &:hover {
-                background-color: var(--l);
+                background-color: $l;
             }
             &:focus{
-                outline: 2px solid var(--l);
-                border-radius: var(--s-03);
+                outline: 2px solid $l;
+                border-radius: $s-03;
             }
         }
     }
     input {
         flex-grow: 1;
-        padding: var(--s-01);
+        padding: $s-01;
 
         background: transparent;
         border-radius: 4px;
-        border: 2px solid var(--g4);
+        border: 2px solid $g4;
 
         &:hover, &:focus{
-            border: 2px solid var(--g3);
+            border: 2px solid $g3;
         }
     }
     aside {
@@ -303,8 +303,8 @@
         height: 100%;
         display: flex;
         flex-direction: column;
-        gap: var(--s-3);
-        padding-bottom: var(--s-4);
+        gap: $s-3;
+        padding-bottom: $s-4;
 
         overflow-y: auto;
 
@@ -323,18 +323,18 @@
         
         /* fake a flex gap, so that it can be overwritten */
         & > *:not(:last-child) {
-            margin-bottom: var(--s-2);
+            margin-bottom: $s-2;
         }
         & > .title {
-            margin-bottom: var(--s-01) !important;
+            margin-bottom: $s-01 !important;
 
             display: flex;
-            gap: var(--s-02);
+            gap: $s-02;
             align-items: center;
         }
     }
     .word {
-        margin-bottom: var(--s-03);
+        margin-bottom: $s-03;
     }
     section {
         width: 100%;
@@ -342,7 +342,7 @@
 
         display: flex;
         flex-direction: column;
-        gap: var(--s-03);
+        gap: $s-03;
 
         & > p::after {
             content: ".";
@@ -350,11 +350,11 @@
     }
     section > p,
     .word_list {
-        margin-left: var(--s-2);
+        margin-left: $s-2;
     }
     .example {
         font-style: italic;
-        color: var(--g1);
+        color: $g1;
     }
     .word_list {
         max-width: 100%;
@@ -363,7 +363,7 @@
         flex-wrap: wrap;
 
         & a:not(:last-child){
-            margin-right: var(--s-0);
+            margin-right: $s-0;
             &::after {
                 content: ",";
             }
@@ -373,20 +373,20 @@
     .line {
         height: 1px;
         width: 100%;
-        background: var(--g5);
+        background: $g5;
     }
 
     .sides{
         display: flex;
-        gap: var(--s-0);
+        gap: $s-0;
     }
     .half{
         flex-grow: 1;
     }
     .horiz{
-        margin-bottom: var(--s-03) !important;
+        margin-bottom: $s-03 !important;
         display: flex;
         align-items: center;
-        gap: var(--s-03);
+        gap: $s-03;
     }
 </style>
