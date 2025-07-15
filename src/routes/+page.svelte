@@ -19,7 +19,7 @@
     });
 
     function KeyDown(e){
-        console.log(e);
+        // console.log(e);
         
         // pressing enter on the search bar will confirm it as the search term, so it can be stored in recents and 
         const search_box = document.getElementById('search');
@@ -73,7 +73,7 @@
             // Sort by space count (ascending)
             const spaceCountA = (a.word.match(/ /g) || []).length;
             const spaceCountB = (b.word.match(/ /g) || []).length;
-            console.log(a.word, spaceCountA, b.word, spaceCountB);
+            // console.log(a.word, spaceCountA, b.word, spaceCountB);
             if (spaceCountA !== spaceCountB)
                 return spaceCountA > spaceCountB ? 1 : -1;
 
@@ -254,7 +254,7 @@
     </aside>
 </main>
 
-<style>
+<style lang="css">
     main {
         width: 100%;
         height: 100%;
@@ -269,6 +269,21 @@
         gap: var(--s-1);
         align-items: center;
         margin-bottom: var(--s-1);
+
+        & > button {
+            height: var(--s-3);
+            aspect-ratio: 1 / 1;
+            background: var(--g1);
+            border-radius: 2px;
+
+            &:hover {
+                background-color: var(--l);
+            }
+            &:focus{
+                outline: 2px solid var(--l);
+                border-radius: var(--s-03);
+            }
+        }
     }
     input {
         flex-grow: 1;
@@ -277,22 +292,10 @@
         background: transparent;
         border-radius: 4px;
         border: 2px solid var(--g4);
-    }
-    input:hover, input:focus{
-        border: 2px solid var(--g3);
-    }
-    nav > button {
-        height: var(--s-3);
-        aspect-ratio: 1 / 1;
-        background: var(--g1);
-        border-radius: 2px;
-    }
-    nav > button:hover {
-        background-color: var(--l);
-    }
-    nav > button:focus{
-        outline: 1px solid var(--l);
-        border-radius: var(--s-03);
+
+        &:hover, &:focus{
+            border: 2px solid var(--g3);
+        }
     }
     aside {
         width: 100%;
@@ -317,18 +320,18 @@
         max-width: 100%;
         display: flex;
         flex-direction: column;
-    }
-    /* fake a flex gap, so that it can be overwritten */
-    article > *:not(:last-child) {
-        margin-bottom: var(--s-2);
-    }
-    article > .title {
-        margin-bottom: var(--s-01) !important;
-    }
-    .title {
-        display: flex;
-        gap: var(--s-02);
-        align-items: center;
+        
+        /* fake a flex gap, so that it can be overwritten */
+        & > *:not(:last-child) {
+            margin-bottom: var(--s-2);
+        }
+        & > .title {
+            margin-bottom: var(--s-01) !important;
+
+            display: flex;
+            gap: var(--s-02);
+            align-items: center;
+        }
     }
     .word {
         margin-bottom: var(--s-03);
@@ -340,13 +343,14 @@
         display: flex;
         flex-direction: column;
         gap: var(--s-03);
+
+        & > p::after {
+            content: ".";
+        }
     }
     section > p,
     .word_list {
         margin-left: var(--s-2);
-    }
-    section > p::after {
-        content: ".";
     }
     .example {
         font-style: italic;
@@ -355,12 +359,16 @@
     .word_list {
         max-width: 100%;
         display: flex;
-        gap: var(--s-01);
         text-transform: lowercase;
         flex-wrap: wrap;
-    }
-    .word_list a:not(:last-child)::after {
-        content: ",";
+
+        & a:not(:last-child){
+            margin-right: var(--s-0);
+            &::after {
+                content: ",";
+            }
+        }
+        
     }
     .line {
         height: 1px;

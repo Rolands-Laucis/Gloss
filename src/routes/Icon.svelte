@@ -1,6 +1,6 @@
 <script>
     export let classes='', style='', title='',
-                inert=false,
+                inert=false, tabindex=-1,
                 size = 14, fill=0, wgth=200, grad=0, opsz=24,
                 hover_fill=false, to_fill = parseInt(fill) === 0 ? 1 : 0, to_wgth = wgth, to_grad = grad, to_opsz = opsz;
 </script>
@@ -15,6 +15,7 @@
     class:hover_fill
     style="font-size:{size}px;--f:{fill};--f_h:{to_fill}; --w:{wgth};--w_h:{to_wgth}; --g:{grad};--g_h:{to_grad}; --o:{opsz};--o_h:{to_opsz};{style}"
     {title}
+    {tabindex}
     on:click|stopPropagation>
     <slot></slot>
 </span>
@@ -24,18 +25,24 @@
         user-select: none;
         cursor: inherit;
         font-variation-settings: 'FILL' var(--f), 'wght' var(--w), 'GRAD' var(--g), 'opsz' var(--o);
+        
+        &:hover, &:focus{
+            cursor: pointer;
+            --w: var(--w_h) !important;
+            --g: var(--g_h) !important;
+            --o: var(--o_h) !important;
+            filter: brightness(1.5);
+        }
+        &:focus{
+            outline: 2px solid var(--l);
+            border-radius: var(--s-03);
+        }
+        &:is(.hover_fill):hover{
+            --f: var(--f_h) !important;
+        }
+        
+        &.inert{pointer-events: none;}
     }
-    span:hover{
-        cursor: pointer;
-        --w: var(--w_h) !important;
-        --g: var(--g_h) !important;
-        --o: var(--o_h) !important;
-        filter: brightness(1.5);
-    }
-    span:is(.hover_fill):hover{
-        --f: var(--f_h) !important;
-    }
-    span.inert{pointer-events: none;}
 
     @keyframes anim_shake {
         0%{rotate: 0deg;}

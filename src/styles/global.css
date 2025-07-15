@@ -81,9 +81,10 @@ html *{
 html[theme="light"]{
     color-scheme: light;
     filter: invert(1);
-}
-html[theme="light"] body{
-    background-color: #000;
+
+    & body {
+        background-color: #000;
+    }
 }
 body{
     --p: var(--s-2);
@@ -104,11 +105,18 @@ h1{font-size: var(--s-3);font-weight: 600;}
 h2{font-size: var(--s-1);font-weight: 400;color: var(--g2);}
 p{font-size: var(--s-1);}
 small{font-size: var(--s-0); color: var(--g2);}
-a{font-size: var(--s-1); color: var(--g2);text-decoration:none; font-weight: 400; font-style: italic;}
-a:hover{
-    cursor: pointer;
-    color: var(--l);
-    text-decoration: underline;
+a{
+    font-size: var(--s-1); 
+    color: var(--g2);
+    text-decoration:none; 
+    font-weight: 400; 
+    font-style: italic;
+
+    &:hover{
+        cursor: pointer;
+        color: var(--l);
+        text-decoration: underline;
+    }
 }
 button:hover{
     cursor: pointer;
