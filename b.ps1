@@ -6,7 +6,7 @@ if ($?) {
     Write-Output "deleting unneeded build folders..."
     # Delete specific folders if they exist
     # $foldersToDelete = @("build", "bundle", "examples", "incremental", "nsis", "wix", "deps")
-    $foldersToDelete = @("build","bundle", "examples", "incremental", "nsis", "wix")
+    $foldersToDelete = @("bundle", "examples", "incremental", "nsis", "wix")
     foreach ($folder in $foldersToDelete) {
         $path = "src-tauri\target\release\$folder"
         if (Test-Path $path) {

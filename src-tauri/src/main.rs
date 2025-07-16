@@ -5,32 +5,20 @@
 )]
 #![allow(warnings)] //turn off warnings
 
-mod wordnet_v2;
-use wordnet_v2::{initialize_wordnet_index, search_words};
+// mod wordnet_v2;
+// use wordnet_v2::{initialize_wordnet_index, search_words};
+mod wordnet_v3;
+use wordnet_v3::{init_wordnet, search_wordnet};
 
 fn main() {
-    wordnet_v2::initialize_wordnet_index("resources/wordnet.json")
-        .map(|_| "WordNet initialized on startup".to_string())
-        .map_err(|e| format!("Startup initialization failed: {}", e));
+    // Initialize once at startup
+    init_wordnet("resources/en_wordnet_lmf_2024.json", "en").expect("Failed to load English WordNet");
+    init_wordnet("resources/lv_wordnet_lmf_2025.json", "lv").expect("Failed to load Latvian WordNet");
         
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
-            search_words
+            search_wordnet
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
-
-// Alternative: Initialize WordNet on app startup
-// #[tauri::command]
-// fn initialize_on_startup() -> Result<String, String> {
-//     wordnet_v2::initialize_wordnet_index("resources/wordnet.json")
-//         .map(|_| "WordNet initialized on startup".to_string())
-//         .map_err(|e| format!("Startup initialization failed: {}", e))
-// }
-
-// If you want to auto-initialize on startup, add this to your Builder:
-// .setup(|app| {
-//     let _ = initialize_on_startup();
-//     Ok(())
-// })

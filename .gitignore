@@ -1,5 +1,6 @@
 src-tauri/icons/android/*
 src-tauri/icons/ios/*
+wordnets/*
 
 .DS_Store
 node_modules

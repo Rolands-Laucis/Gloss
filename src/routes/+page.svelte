@@ -2,14 +2,17 @@
     import { onMount } from "svelte";
     import { invoke } from "@tauri-apps/api/core";
     import { getCurrentWindow } from "@tauri-apps/api/window";
+    import {POS_tags} from './pos_tags.js';
 
     import Icon from "./Icon.svelte";
 
-    let search = $state(""),
+    let search = $state("good"),
         suggestions = $state([]); //Lexicon
-    let dark_mode = $state(true);
+    let dark_mode = $state(true), lang = $state(0);
     let stars = $state([]);
     let recents = $state([]);
+
+    const langs = ['en', 'lv']
 
     onMount(() => {
         stars = JSON.parse(localStorage.getItem("stars") || "[]");
@@ -40,19 +43,17 @@
     }
 
     async function Query(input = "") {
-        const res = await invoke("search_words", {
+        const res = await invoke("search_wordnet", {
             query: input,
-            limit: 15,
+            languageCode: langs[lang],
+            maxResults: 15
         });
+        console.log(res);
+        // return [];
 
         const entries = [];
         for (const e of res) {
-            if (e.score < 60) continue;
-
-            e.word = e.word.replaceAll("_", " ");
-            e.synonyms = e.synonyms
-                .filter((s) => (s.match(/_/g) || []).length < 2)
-                .map((s) => s.replace("_", " "));
+            if (e.match_score < 30) continue;
 
             const existing = entries.find((entry) => e.word === entry.word);
             if (existing) {
@@ -78,8 +79,8 @@
                 return spaceCountA > spaceCountB ? 1 : -1;
 
             // Sort by score (descending)
-            const maxScoreA = Math.max(...a.senses.map((s) => s.score));
-            const maxScoreB = Math.max(...b.senses.map((s) => s.score));
+            const maxScoreA = Math.max(...a.senses.map((s) => s.match_score));
+            const maxScoreB = Math.max(...b.senses.map((s) => s.match_score));
             if (maxScoreA !== maxScoreB) return maxScoreB > maxScoreA ? 1 : -1;
 
             // otherwise alphabetically
@@ -97,6 +98,11 @@
             "theme",
             dark_mode === true ? "dark" : "light",
         );
+    }
+
+    function ChangeLang(){
+        lang += 1;
+        if(lang > langs.length - 1) lang = 0;
     }
 
     // toggles starred words
@@ -135,6 +141,10 @@
             </datalist>
         {/if}
 
+        <button on:click={ChangeLang} class="outline">
+            {langs[lang]}
+        </button>
+
         <button on:click={ChangeTheme}>
             <Icon fill={1} inert size={20} style="color: var(--d);">
                 contrast
@@ -171,15 +181,20 @@
 
                         {#each e.senses as sense}
                             <section>
-                                <small>{sense.pos} ~{sense.score}</small>
-                                <p>{sense.definition}</p>
-                                {#if sense.example}
-                                    <p class="example">“{sense.example}”</p>
+                                <small title={POS_tags[langs[lang]][sense.pos].desc}>{POS_tags[langs[lang]][sense.pos].long} ~{sense.match_score}</small>
+                                {#each sense.definitions as d}
+                                    <p>{d}</p>
+                                {/each}
+                                {#if sense.examples.length}
+                                    {#each sense.examples as e}
+                                        <p class="example">“{e}”</p>
+                                    {/each}
                                 {/if}
 
                                 {#if sense.synonyms.length}
                                     <!-- <h2>synonyms</h2> -->
                                     <div class="word_list">
+                                        <!-- <p>syn:</p> -->
                                         {#each sense.synonyms as syn}
                                             <!-- svelte-ignore a11y_click_events_have_key_events -->
                                             <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -188,6 +203,23 @@
                                             <a
                                                 on:click|preventDefault={() =>
                                                     (search = syn)}>{syn}</a
+                                            >
+                                        {/each}
+                                    </div>
+                                {/if}
+
+                                {#if sense.antonyms.length}
+                                    <!-- <h2>synonyms</h2> -->
+                                    <div class="word_list">
+                                        <!-- <p>ant:</p> -->
+                                        {#each sense.antonyms as ant}
+                                            <!-- svelte-ignore a11y_click_events_have_key_events -->
+                                            <!-- svelte-ignore a11y_no_static_element_interactions -->
+                                            <!-- svelte-ignore a11y_missing_attribute -->
+                                            <!-- svelte-ignore event_directive_deprecated -->
+                                            <a
+                                                on:click|preventDefault={() =>
+                                                    (search = ant)}>{ant}</a
                                             >
                                         {/each}
                                     </div>
@@ -283,6 +315,18 @@
                 outline: 2px solid $l;
                 border-radius: $s-03;
             }
+
+            &.outline{
+                background: transparent;
+                border: 2px solid $g3;
+                border-radius: $s-03;
+                color: $g3;
+
+                &:hover {
+                    border: 2px solid $g1;
+                    color: $g1;
+                }
+            }
         }
     }
     input {
@@ -346,6 +390,9 @@
 
         & > p::after {
             content: ".";
+        }
+        & p{
+            padding-right: $s-03;
         }
     }
     section > p,
