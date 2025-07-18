@@ -1,7 +1,7 @@
 [package]
 name = "gloss"
-version = "0.1.0"
-description = "A fast glossary app"
+version = "1.0.0"
+description = "A fast, minimal, clean, multi-lingual glossary app"
 authors = ["Rolands Laucis"]
 edition = "2021"
 
