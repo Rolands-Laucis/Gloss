@@ -33,7 +33,7 @@
 
             {#if sense?.definitions.length}
                 {#each sense.definitions as d}
-                    <p>{d}</p>
+                    <p class="def">{d}</p>
                 {/each}
             {/if}
 
@@ -45,33 +45,43 @@
 
             {#if sense.synonyms.length}
                 <!-- <h2>synonyms</h2> -->
-                <div class="word_list">
-                    <p>synonyms:</p>
-                    {#each sense.synonyms as syn}
-                        <!-- svelte-ignore a11y_click_events_have_key_events -->
-                        <!-- svelte-ignore a11y_no_static_element_interactions -->
-                        <!-- svelte-ignore a11y_missing_attribute -->
-                        <!-- svelte-ignore event_directive_deprecated -->
-                        <a on:click|preventDefault={() => (search = syn)}
-                            >{syn}</a
-                        >
-                    {/each}
+                <div class="block">
+                    <small>synonyms:</small>
+                    <div class="word_list">
+                        <br/>
+                        {#each sense.synonyms as syn}
+                            <!-- svelte-ignore a11y_click_events_have_key_events -->
+                            <!-- svelte-ignore a11y_no_static_element_interactions -->
+                            <!-- svelte-ignore a11y_missing_attribute -->
+                            <!-- svelte-ignore event_directive_deprecated -->
+                            <a on:click|preventDefault={() => (search = syn)}
+                                >{syn}</a
+                            >
+                        {/each}
+                    </div>
                 </div>
             {/if}
 
             {#if sense.antonyms.length}
-                <!-- <h2>synonyms</h2> -->
-                <div class="word_list">
-                    <!-- <p>ant:</p> -->
-                    {#each sense.antonyms as ant}
-                        <!-- svelte-ignore a11y_click_events_have_key_events -->
-                        <!-- svelte-ignore a11y_no_static_element_interactions -->
-                        <!-- svelte-ignore a11y_missing_attribute -->
-                        <!-- svelte-ignore event_directive_deprecated -->
-                        <a on:click|preventDefault={() => (search = ant)}
-                            >{ant}</a
-                        >
-                    {/each}
+                <div class="block">
+                    <small>antonyms:</small>
+                    <!-- <p>antonyms:</p> -->
+                    <!-- svelte-ignore a11y_click_events_have_key_events -->
+                    <!-- svelte-ignore a11y_no_static_element_interactions -->
+                    <!-- svelte-ignore a11y_missing_attribute -->
+                    <!-- svelte-ignore event_directive_deprecated -->
+                    <div class="word_list">
+                        <!-- <p>ant:</p> -->
+                        {#each sense.antonyms as ant}
+                            <!-- svelte-ignore a11y_click_events_have_key_events -->
+                            <!-- svelte-ignore a11y_no_static_element_interactions -->
+                            <!-- svelte-ignore a11y_missing_attribute -->
+                            <!-- svelte-ignore event_directive_deprecated -->
+                            <a on:click|preventDefault={() => (search = ant)}
+                                >{ant}</a
+                            >
+                        {/each}
+                    </div>
                 </div>
             {/if}
         </section>
@@ -110,25 +120,27 @@
         flex-direction: column;
         gap: $s-03;
 
-        counter-increment: definition-counter;
+        // counter-increment: definition-counter;
 
-        & > p::after {
+        & > .def::after {
             content: ".";
         }
-        & > p::before {
-            content: counter(definition-counter) ". ";
-        }
+        // & > p::before {
+        //     content: counter(definition-counter) ". ";
+        // }
         & > p{
             margin-left: $s-2;
             padding-right: $s-03;
         }
-    }
-    .word_list{
-        // margin-left: $s-2;
-        margin-top: $s-01;
 
-        p{
-            font-weight: 200;
+        .block{
+            margin-left: $s-2;
+            margin-top: $s-03;
+
+            small{
+                // font-weight: 300;
+                color: $g1;
+            }
         }
     }
     .example {

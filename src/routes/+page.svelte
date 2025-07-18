@@ -9,7 +9,7 @@
     import Entry from "./entry.svelte";
     import Icon from "$lib/Icon.svelte";
 
-    let search = $state(""),
+    let search = $state("wolf"),
         suggestions = $state([]); //Lexicon
     let stars = $state([]);
     let recents = $state([]);
