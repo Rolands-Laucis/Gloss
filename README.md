@@ -2,10 +2,16 @@
 
 <img src="screenshot.png" height=300>
 
-Included languages: English (default), Latvian. 
+### Features
+* Included languages: English (default), Latvian. 
 More can be added easily by downloading the wordnet XML file in LMF format of a language, if available online, and parsing it with the included parser.
+* Real-time reactive typing fuzzy search with match score.
+* Dark and light mode
+* Stared words list
+* Recently searched words list
+* Acrylic background and unintrusive design, so it blends and doesnt overpower your current actual task (like writing something).
 
-### Tech stack
+### Tech stack and required programming languages on your machine
 * Tauri - backend
 * Svelte 5 (with Vite 6 and SCSS) - frontend
 * Rust ^1.88.x - used by Tauri
@@ -22,6 +28,12 @@ You can then move that folder wherever you like, and it will work. It just needs
 There might be differences for Linux and Mac, idk, i've never built for them.
 
 I've set it up so that it makes as small of a build as possible, thus the bundle and installers are not created, but you can change that in tauri configs. Read the docs.
+
+### Metrics
+* App runtime takes about 200MB of RAM. 
+* Built app folder takes up about 100MB of disk space.
+* Starts up in about 1-1.5 seconds.
+* Search bar is reactive and fuzzy fetches all results under a second, so real-time typing is not perfectly smooth, but satisfactory.
 
 ## Recommended IDE Setup
 
