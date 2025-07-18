@@ -12,13 +12,14 @@ use wordnet_v3::{init_wordnet, search_wordnet};
 
 fn main() {
     // Initialize once at startup
-    init_wordnet("resources/en_wordnet_lmf_2024.json", "en").expect("Failed to load English WordNet");
-    init_wordnet("resources/lv_wordnet_lmf_2025.json", "lv").expect("Failed to load Latvian WordNet");
-        
+    init_wordnet("resources/en_wordnet_lmf_2024.json", "en")
+        .expect("Failed to load English WordNet");
+    init_wordnet("resources/lv_wordnet_lmf_2025.json", "lv")
+        .expect("Failed to load Latvian WordNet");
+
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![
-            search_wordnet
-        ])
+        .plugin(tauri_plugin_fs::init())
+        .invoke_handler(tauri::generate_handler![search_wordnet])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

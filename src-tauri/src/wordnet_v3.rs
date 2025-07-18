@@ -1,9 +1,9 @@
+use fuzzy_matcher::skim::SkimMatcherV2;
+use fuzzy_matcher::FuzzyMatcher;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
 use std::sync::OnceLock;
-use serde::{Deserialize, Serialize};
-use fuzzy_matcher::FuzzyMatcher;
-use fuzzy_matcher::skim::SkimMatcherV2;
 
 // Add to Cargo.toml:
 // [dependencies]
@@ -21,14 +21,14 @@ struct Synset {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct WordEntry {
-    p: Option<Vec<String>>,  // pronoun
-    n: Option<Vec<String>>,  // noun
-    u: Option<Vec<String>>,  // NULL/unknown
-    v: Option<Vec<String>>,  // verb
-    x: Option<Vec<String>>,  // other
-    a: Option<Vec<String>>,  // adjective
-    r: Option<Vec<String>>,  // adverb
-    s: Option<Vec<String>>,  // adj satellite
+    p: Option<Vec<String>>, // pronoun
+    n: Option<Vec<String>>, // noun
+    u: Option<Vec<String>>, // NULL/unknown
+    v: Option<Vec<String>>, // verb
+    x: Option<Vec<String>>, // other
+    a: Option<Vec<String>>, // adjective
+    r: Option<Vec<String>>, // adverb
+    s: Option<Vec<String>>, // adj satellite
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -61,11 +61,11 @@ static WORDNET_SEARCHERS: OnceLock<Mutex<HashMap<String, WordNetSearcher>>> = On
 impl WordNetSearcher {
     fn new(wordnet: WordNet) -> Self {
         let mut synset_to_words = HashMap::new();
-        
+
         // Build reverse mapping from synset IDs to words
         for (word, entry) in &wordnet.words {
             let mut all_synsets = Vec::new();
-            
+
             if let Some(pronouns) = &entry.p {
                 all_synsets.extend(pronouns.iter().cloned());
             }
@@ -90,7 +90,7 @@ impl WordNetSearcher {
             if let Some(adj_satellites) = &entry.s {
                 all_synsets.extend(adj_satellites.iter().cloned());
             }
-            
+
             for synset_id in all_synsets {
                 synset_to_words
                     .entry(synset_id)
@@ -98,17 +98,17 @@ impl WordNetSearcher {
                     .push(word.clone());
             }
         }
-        
+
         Self {
             wordnet,
             synset_to_words,
         }
     }
-    
+
     fn get_pos_description(pos: &str) -> &'static str {
         match pos {
             "p" => "pronoun",
-            "n" => "noun", 
+            "n" => "noun",
             "u" => "NULL/unknown",
             "v" => "verb",
             "x" => "other",
@@ -118,7 +118,7 @@ impl WordNetSearcher {
             _ => "unknown",
         }
     }
-    
+
     fn resolve_synset_ids_to_words(&self, synset_ids: &[String]) -> Vec<String> {
         let mut words = Vec::new();
         for synset_id in synset_ids {
@@ -130,33 +130,41 @@ impl WordNetSearcher {
         words.dedup();
         words
     }
-    
+
     pub fn search(&self, query: &str, max_results: usize) -> Vec<WordResult> {
         let matcher = SkimMatcherV2::default();
         let mut results = Vec::new();
-        
+
         // Search through all words
         for (word, entry) in &self.wordnet.words {
             if let Some(score) = matcher.fuzzy_match(word, query) {
+                // Debug: Print the base score for this word
+                // println!("Word: '{}' -> Base score: {}", word, score);
+
                 // Process each part of speech
                 let pos_entries = vec![
-                    ("p", &entry.p),  // pronoun
-                    ("n", &entry.n),  // noun
-                    ("u", &entry.u),  // NULL/unknown
-                    ("v", &entry.v),  // verb
-                    ("x", &entry.x),  // other
-                    ("a", &entry.a),  // adjective
-                    ("r", &entry.r),  // adverb
-                    ("s", &entry.s),  // adj satellite
+                    ("p", &entry.p), // pronoun
+                    ("n", &entry.n), // noun
+                    ("u", &entry.u), // NULL/unknown
+                    ("v", &entry.v), // verb
+                    ("x", &entry.x), // other
+                    ("a", &entry.a), // adjective
+                    ("r", &entry.r), // adverb
+                    ("s", &entry.s), // adj satellite
                 ];
-                
+
                 for (pos, synset_ids_opt) in pos_entries {
                     if let Some(synset_ids) = synset_ids_opt {
                         for synset_id in synset_ids {
                             if let Some(synset) = self.wordnet.synsets.get(synset_id) {
                                 let synonyms = self.resolve_synset_ids_to_words(&synset.syns);
                                 let antonyms = self.resolve_synset_ids_to_words(&synset.ants);
-                                
+
+                                // Add some variation to score based on synset quality
+                                let adjusted_score = score
+                                    + (synset.defs.len() as i64 * 2)
+                                    + (synset.ex.len() as i64);
+
                                 results.push(WordResult {
                                     word: word.clone(),
                                     pos: pos.to_string(),
@@ -164,7 +172,7 @@ impl WordNetSearcher {
                                     examples: synset.ex.clone(),
                                     synonyms,
                                     antonyms,
-                                    match_score: score,
+                                    match_score: adjusted_score,
                                 });
                             }
                         }
@@ -172,31 +180,35 @@ impl WordNetSearcher {
                 }
             }
         }
-        
-        // Sort by match score (descending) and then by word (ascending)
+
+        // Sort by match score (descending), then by word (ascending), then by pos
         results.sort_by(|a, b| {
-            b.match_score.cmp(&a.match_score)
+            b.match_score
+                .cmp(&a.match_score)
                 .then_with(|| a.word.cmp(&b.word))
                 .then_with(|| a.pos.cmp(&b.pos))
         });
-        
+
         // Limit results
         results.truncate(max_results);
         results
     }
 }
 
-pub fn init_wordnet(file_path: &str, language_code: &str) -> Result<(), Box<dyn std::error::Error>> {
+pub fn init_wordnet(
+    file_path: &str,
+    language_code: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
     let json_content = fs::read_to_string(file_path)?;
     let wordnet: WordNet = serde_json::from_str(&json_content)?;
-    
+
     let searcher = WordNetSearcher::new(wordnet);
-    
+
     // Get or initialize the global HashMap with Mutex
     let searchers_mutex = WORDNET_SEARCHERS.get_or_init(|| Mutex::new(HashMap::new()));
     let mut searchers = searchers_mutex.lock().unwrap();
     searchers.insert(language_code.to_string(), searcher);
-    
+
     Ok(())
 }
 
