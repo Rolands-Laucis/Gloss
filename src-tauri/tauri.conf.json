@@ -46,7 +46,7 @@
       "icons/icon.ico"
     ],
     "resources": [
-      "resources/wordnet.json"
+      "resources/*.json"
     ],
     "windows": {
       "allowDowngrades": true,
