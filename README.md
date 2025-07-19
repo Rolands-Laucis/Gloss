@@ -5,6 +5,7 @@
 ### Features
 * Included languages: English (default), Latvian. 
 More can be added easily by downloading the wordnet XML file in LMF format of a language, if available online, and parsing it with the included parser.
+* Word definition, part-of-speech (POS), examples, synonyms, antonyms (very few available).
 * Real-time reactive typing fuzzy search with match score.
 * Dark and light mode
 * Stared words list
