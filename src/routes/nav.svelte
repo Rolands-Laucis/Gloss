@@ -1,4 +1,6 @@
 <script>
+    import {onMount, untrack} from 'svelte';
+
     import Icon from "$lib/Icon.svelte";
 
     let {search = $bindable(), suggestions, langs, lang = $bindable()} = $props();
@@ -16,6 +18,42 @@
         lang += 1;
         if(lang > langs.length - 1) lang = 0;
     }
+
+    onMount(() =>{
+        const searchInput = document.getElementById('search');
+        if (searchInput) {
+            searchInput.focus();
+        }
+
+        // Add event listener for keydown events
+        document.addEventListener('keydown', handleKeyDown);
+
+        // Cleanup event listener on component destroy
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    })
+
+    // handle keydown events for the suggestions list selecting up and down the list with arrow keys
+    let suggestion_selection = $state(0);
+    function handleKeyDown(event) {
+        if (event.key === 'ArrowDown') {
+            suggestion_selection = (suggestion_selection + 1) % (suggestions.length + 1); // Include 0th index
+        } else if (event.key === 'ArrowUp') {
+            suggestion_selection = (suggestion_selection - 1 + (suggestions.length + 1)) % (suggestions.length + 1); // Include 0th index
+        } else if (event.key === 'Enter') {
+            if (suggestion_selection > 0) {
+                const selectedElement = document.querySelector(`.suggestions li:nth-child(${suggestion_selection})`);
+                selectedElement?.click();
+            }
+        } 
+    }
+    $effect(() => {
+        search;
+        untrack(() => {
+            suggestion_selection = 0; // Reset selection when suggestions change
+        });
+    });
 </script>
 
 <nav>
@@ -28,17 +66,19 @@
         name="search"
         id="search"
         placeholder="search..."
-        list="suggestions"
         bind:value={search}
-    />
+            />
 
     <!-- dont show if its just 1 word which is the search word -->
-    {#if !(suggestions.length == 1 && suggestions[0] === search)}
-        <datalist id="suggestions" hidden>
-            {#each suggestions as s}
-                <option value={s}></option>
+    {#if !(suggestions.length === 1 && suggestions[0] === search)}
+        <ul class="suggestions">
+            {#each suggestions as s, i}
+                <!-- svelte-ignore a11y_click_events_have_key_events -->
+                <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+                <!-- svelte-ignore event_directive_deprecated -->
+                <li on:click={() => search = s} class:selected={i + 1 === suggestion_selection}>{s}</li>
             {/each}
-        </datalist>
+        </ul>
     {/if}
 
     <button on:click={ChangeLang} class="outline">
@@ -59,6 +99,7 @@
         gap: $s-1;
         align-items: center;
         margin-bottom: $s-1;
+        position: relative;
 
         input {
             flex-grow: 1;
@@ -96,6 +137,35 @@
                 &:hover {
                     border: 2px solid $g1;
                     color: $g1;
+                }
+            }
+        }
+
+        .suggestions {
+            position: absolute;
+            right: $s-0;
+            top: 34px + $s-03;
+            background: #1d1d1dd1;
+            backdrop-filter: blur(8px);
+            border: 1px solid $g5;
+            border-radius: 4px;
+            margin-top: 4px;
+            z-index: 1000;
+            width: min-content;
+            list-style: none;
+
+            li {
+                margin: $s-01;
+                padding: $s-03;
+                cursor: pointer;
+                color: $g2;
+                white-space: pre;
+                word-break: keep-all;
+                border-radius: $s-03;
+
+                &:hover, &:focus, &.selected {
+                    color: $g1;
+                    background: $g5;
                 }
             }
         }
