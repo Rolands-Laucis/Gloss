@@ -1,4 +1,5 @@
 <script>
+    import {fly, slide, scale} from 'svelte/transition';
     import { onMount } from "svelte";
     import { invoke } from "@tauri-apps/api/core";
     import { getCurrentWindow } from "@tauri-apps/api/window";
@@ -123,11 +124,11 @@
     <aside>
         {#if search}
             {#await Query(search)}
-                <small>searching...</small>
+                <!-- <small>searching...</small> -->
             {:then entries}
-                {#each entries as e}
+                {#each entries as e, i}
                     {@const starred = stars.includes(e.word)}
-                    <Entry {e} {starred} {langs} {lang} bind:search={search} {Star}></Entry>
+                    <Entry {e} {starred} {langs} {lang} bind:search={search} {Star} delay={i}></Entry>
                 {/each}
             {:catch error}
                 <p>Error:</p>
@@ -137,7 +138,7 @@
             <div class="sides">
                 <article class="half">
                     <h1 style="margin-bottom: var(--s-03);">Favorites</h1>
-                    {#each stars.toSorted() as star}
+                    {#each stars as star}
                         <div class="horiz">
                             <!-- svelte-ignore a11y_click_events_have_key_events -->
                             <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -206,6 +207,7 @@
         padding-bottom: $s-4;
 
         overflow-y: auto;
+        overflow-x: hidden;
 
         mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
         -webkit-mask-image: linear-gradient(

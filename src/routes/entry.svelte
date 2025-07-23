@@ -1,12 +1,16 @@
 <script>
+    import {fly, fade, slide, blur} from 'svelte/transition';
     import {POS_tags} from './pos_tags.js';
     
     import Icon from "$lib/Icon.svelte";
     
-    let {e, search = $bindable(), starred, langs, lang, Star} = $props();
+    let {e, search = $bindable(), starred, langs, lang, Star, delay} = $props();
 </script>
 
-<article>
+<!-- in:fly|global={{duration:300, y:-100, delay:delay*150}} out:fade|global={{duration:300}} -->
+ <!-- transition:fly|global={{duration:200, y:-50, delay:delay*150}} -->
+  <!-- transition:blur|global={{duration:200}} -->
+<article transition:fly|global={{duration:200, y:-30, delay:delay*150}}>
     <div class="title">
         <h1 class="word">{e.word}</h1>
 
