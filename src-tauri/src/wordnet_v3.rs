@@ -181,12 +181,18 @@ impl WordNetSearcher {
             }
         }
 
-        // Sort by match score (descending), then by word (ascending), then by pos
+        // Sort by: 1) exact matches first, 2) single words, 3) match score (descending), 4) word (ascending), 5) pos
         results.sort_by(|a, b| {
-            b.match_score
-                .cmp(&a.match_score)
-                .then_with(|| a.word.cmp(&b.word))
-                .then_with(|| a.pos.cmp(&b.pos))
+            let a_is_exact = a.word.to_lowercase() == query.to_lowercase();
+            let b_is_exact = b.word.to_lowercase() == query.to_lowercase();
+            let a_is_single = !a.word.contains(' ') && !a.word.contains('-');
+            let b_is_single = !b.word.contains(' ') && !b.word.contains('-');
+            
+            b_is_exact.cmp(&a_is_exact)  // Exact matches first (true > false)
+                .then_with(|| b_is_single.cmp(&a_is_single))  // Single words first (true > false)
+                .then_with(|| b.match_score.cmp(&a.match_score))  // Higher scores first
+                .then_with(|| a.word.cmp(&b.word))  // Alphabetical
+                .then_with(|| a.pos.cmp(&b.pos))   // POS as final tiebreaker
         });
 
         // Limit results

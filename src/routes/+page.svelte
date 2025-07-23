@@ -84,27 +84,6 @@
             }
         }
 
-        entries.sort((a, b) => {
-            //exact match first
-            if (a.word === search) return -1;
-            else if (b.word === search) return 1;
-
-            // Sort by space count (ascending)
-            const spaceCountA = (a.word.match(/ /g) || []).length;
-            const spaceCountB = (b.word.match(/ /g) || []).length;
-            // console.log(a.word, spaceCountA, b.word, spaceCountB);
-            if (spaceCountA !== spaceCountB)
-                return spaceCountA > spaceCountB ? 1 : -1;
-
-            // Sort by score (descending)
-            const maxScoreA = Math.max(...a.senses.map((s) => s.match_score));
-            const maxScoreB = Math.max(...b.senses.map((s) => s.match_score));
-            if (maxScoreA !== maxScoreB) return maxScoreB > maxScoreA ? 1 : -1;
-
-            // otherwise alphabetically
-            return b.word.localeCompare(a.word);
-        });
-
         suggestions = [...new Set(entries.map(e => e.word))]; //.filter(w => w !== search)
 
         log(entries);
