@@ -53,6 +53,11 @@
         }else if(e.key === 'w' && e.ctrlKey === true){
             getCurrentWindow().close();
         }
+        else if(e.key === 'Escape'){
+            search = "";
+            suggestions = [];
+            search_box?.focus();
+        }
     }
 
     async function Query(input = "") {
