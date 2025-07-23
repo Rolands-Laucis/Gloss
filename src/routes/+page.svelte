@@ -64,14 +64,14 @@
         const res = await invoke("search_wordnet", {
             query: input,
             languageCode: langs[lang],
-            maxResults: 15
+            maxResults: 10
         });
         // log(res);
         // return [];
 
         const entries = [];
         for (const e of res) {
-            if (e.match_score < 30) continue;
+            // if (e.match_score < 30) continue;
 
             const existing = entries.find((entry) => e.word === entry.word);
             if (existing) {

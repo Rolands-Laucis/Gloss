@@ -2,9 +2,11 @@
     import {onMount, untrack} from 'svelte';
 
     import Icon from "$lib/Icon.svelte";
+    import { fade, fly, slide } from 'svelte/transition';
 
     let {search = $bindable(), suggestions, langs, lang = $bindable()} = $props();
     let dark_mode = $state(true);
+    let searching = $state(false);
 
     function ChangeTheme() {
         dark_mode = !dark_mode;
@@ -23,16 +25,25 @@
         const searchInput = document.getElementById('search');
         if (searchInput) {
             searchInput.focus();
+            searchInput.addEventListener('focus', ToggleSearching);
+            searchInput.addEventListener('blur', ToggleSearching);
         }
 
         // Add event listener for keydown events
         document.addEventListener('keydown', handleKeyDown);
+        
 
         // Cleanup event listener on component destroy
         return () => {
             document.removeEventListener('keydown', handleKeyDown);
+            searchInput?.removeEventListener('focus', ToggleSearching);
+            searchInput?.removeEventListener('blur', ToggleSearching);
         };
-    })
+    });
+
+    function ToggleSearching(e) {
+        searching = e.type === 'focus';
+    }
 
     // handle keydown events for the suggestions list selecting up and down the list with arrow keys
     let suggestion_selection = $state(0);
@@ -70,8 +81,8 @@
             />
 
     <!-- dont show if its just 1 word which is the search word -->
-    {#if !(suggestions.length === 1 && suggestions[0] === search)}
-        <ul class="suggestions">
+    {#if !(suggestions.length === 1 && suggestions[0] === search) && searching}
+        <ul class="suggestions" transition:fly={{duration: 140, y:-20}}>
             {#each suggestions as s, i}
                 <!-- svelte-ignore a11y_click_events_have_key_events -->
                 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
