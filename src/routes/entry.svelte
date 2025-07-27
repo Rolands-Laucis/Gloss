@@ -31,9 +31,10 @@
 
     {#each e.senses as sense}
         <section>
-            <small title={POS_tags[langs[lang]][sense.pos].desc}
-                >{POS_tags[langs[lang]][sense.pos].long} ~{sense.match_score}</small
-            >
+            <small 
+                title={POS_tags[langs[lang]][sense.pos].desc}>
+                    {POS_tags[langs[lang]][sense.pos].long} ~{sense.match_score}
+                </small>
 
             {#if sense?.definitions.length}
                 {#each sense.definitions as d}

@@ -1,6 +1,5 @@
 <script>
-    import {fly, slide, scale} from 'svelte/transition';
-    import { onMount } from "svelte";
+    import { onMount, onDestroy } from "svelte";
     import { invoke } from "@tauri-apps/api/core";
     import { getCurrentWindow } from "@tauri-apps/api/window";
     import {log} from '$lib/shared.js'
@@ -11,8 +10,17 @@
     import Icon from "$lib/Icon.svelte";
 
     let search = $state(""),
+    /**
+     * @type {any[string]}
+     */
         suggestions = $state([]); //Lexicon
+    /**
+     * @type {any[string]}
+     */
     let stars = $state([]);
+    /**
+     * @type {any[string]}
+     */
     let recents = $state([]);
     let lang = $state(0);
 
@@ -31,20 +39,28 @@
         stars = JSON.parse(await readTextFile(import.meta.env.VITE_stars) || "[]");
         recents = JSON.parse(await readTextFile(import.meta.env.VITE_recents) || "[]");
 
-        window.addEventListener('keydown', KeyDown)
+        window.addEventListener('keydown', KeyDown);
+    });
+
+    onDestroy(() => {
+        window.removeEventListener('keydown', KeyDown);
     });
 
     function KeyDown(e){
-        // console.log(e);
+        const search_box = document.getElementById('search');
+        if(!import.meta.env.PROD) log(e);
         
         // pressing enter on the search bar will confirm it as the search term, so it can be stored in recents and 
-        const search_box = document.getElementById('search');
         if(e.key === 'Enter' && e.target === search_box){
             search_box?.blur();
             recents = Array.from(new Set([e.target.value, ...recents]));
             if(recents.length > 200) recents.length = 200;
             writeTextFile(import.meta.env.VITE_recents, JSON.stringify(recents));
             // console.log({recents});
+        }else if((e.key === 'Enter' || e.key === ' ') && e.target !== search_box && document.activeElement?.classList.contains('material-symbols-round') && document.activeElement?.textContent === 'star'){
+            // tab focused star icon, so click it
+            e.preventDefault();
+            document.activeElement?.click();
         }
         // else if(e.key === 'Tab' && e.target !== search_box){
         else if(e.key === 'f' && e.ctrlKey === true && e.target !== search_box){
@@ -86,7 +102,7 @@
 
         suggestions = [...new Set(entries.map(e => e.word))]; //.filter(w => w !== search)
 
-        log(entries);
+        if(!import.meta.env.PROD) log(entries);
         return entries;
     }
 
@@ -95,7 +111,7 @@
         // if already starred, remove it
         if (stars.includes(word)) stars.splice(stars.indexOf(word), 1);
         // otherwise add it
-        else stars.push(word);
+        else stars = [word, ...stars]; //prepend
         // persist to file
         writeTextFile(import.meta.env.VITE_stars, JSON.stringify(stars));
         // console.log({stars});
