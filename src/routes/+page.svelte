@@ -24,26 +24,37 @@
     let recents = $state([]);
     let lang = $state(0);
 
+    /**
+     * @type {Record<string, string>}
+     */
+    let definitionsCache = $state({});
+
     const langs = ['en', 'lv']
 
     onMount(async () => {
         if(!await exists(import.meta.env.VITE_stars)) {
             await create(import.meta.env.VITE_stars);
-            // await writeTextFile(import.meta.env.VITE_stars, '[]');
         }
         if(!await exists(import.meta.env.VITE_recents)) {
             await create(import.meta.env.VITE_recents);
-            // await writeTextFile(import.meta.env.VITE_recents, '[]');
         }
 
         stars = JSON.parse(await readTextFile(import.meta.env.VITE_stars) || "[]");
         recents = JSON.parse(await readTextFile(import.meta.env.VITE_recents) || "[]");
 
+        // Fetch definitions for stars and recents in one batch call
+        const allWords = [...new Set([...stars, ...recents])];
+        if (allWords.length > 0) {
+            fetchDefinitionsBatch(allWords);
+        }
+
         window.addEventListener('keydown', KeyDown);
+        window.addEventListener('mousedown', MouseDown);
     });
 
     onDestroy(() => {
         window.removeEventListener('keydown', KeyDown);
+        window.removeEventListener('mousedown', MouseDown);
     });
 
     function KeyDown(e){
@@ -76,6 +87,16 @@
         }
     }
 
+    function MouseDown(e) {
+        // Mouse button 4 (back button) does the same as Escape
+        if (e.button === 3) {
+            e.preventDefault();
+            search = "";
+            suggestions = [];
+            document.getElementById('search')?.focus();
+        }
+    }
+
     async function Query(input = "") {
         const res = await invoke("search_wordnet", {
             query: input,
@@ -104,6 +125,22 @@
 
         if(!import.meta.env.PROD) log(entries);
         return entries;
+    }
+
+    /**
+     * Fetches definitions for multiple words in a single batch call
+     * @param {string[]} words
+     */
+    async function fetchDefinitionsBatch(words) {
+        try {
+            const result = await invoke("get_first_definitions", {
+                words: words,
+                languageCode: langs[lang]
+            });
+            definitionsCache = {...definitionsCache, ...result};
+        } catch (err) {
+            if(!import.meta.env.PROD) log("Error fetching definitions:", err);
+        }
     }
 
     // toggles starred words
@@ -144,7 +181,7 @@
                             <!-- svelte-ignore a11y_no_static_element_interactions -->
                             <!-- svelte-ignore a11y_missing_attribute -->
                             <!-- svelte-ignore event_directive_deprecated -->
-                            <a on:click|preventDefault={() => (search = star)}>{star}</a>
+                            <a on:click|preventDefault={() => (search = star)} title={definitionsCache[star] || ""}>{star}</a>
                             <Icon
                                 fill={1}
                                 wgth={400}
@@ -168,7 +205,7 @@
                             <!-- svelte-ignore a11y_no_static_element_interactions -->
                             <!-- svelte-ignore a11y_missing_attribute -->
                             <!-- svelte-ignore event_directive_deprecated -->
-                            <a on:click|preventDefault={() => (search = recent)}>{recent}</a>
+                            <a on:click|preventDefault={() => (search = recent)} title={definitionsCache[recent] || ""}>{recent}</a>
                             <Icon
                                 fill={starred ? 1 : 0}
                                 wgth={400}

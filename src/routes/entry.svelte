@@ -5,27 +5,74 @@
     import Icon from "$lib/Icon.svelte";
     
     let {e, search = $bindable(), starred, langs, lang, Star, delay} = $props();
+
+    function copyToClipboard(asMarkdown = false) {
+        let text = '';
+        if (asMarkdown) {
+            text = `# ${e.word}\n`;
+            e.senses.forEach((sense, i) => {
+                const posInfo = POS_tags[langs[lang]][sense.pos];
+                text += `**${posInfo.long}**\n`;
+                if (sense.definitions?.length) {
+                    sense.definitions.forEach((d, j) => {
+                        text += `${j + 1}. ${d}\n`;
+                    });
+                    text += '\n';
+                }
+            });
+        } else {
+            text = `${e.word}\n`;
+            let defNum = 1;
+            e.senses.forEach((sense) => {
+                if (sense.definitions?.length) {
+                    sense.definitions.forEach((d) => {
+                        text += `${defNum}. ${d}\n`;
+                        defNum++;
+                    });
+                }
+            });
+        }
+        navigator.clipboard.writeText(text.trim());
+    }
 </script>
 
 <!-- in:fly|global={{duration:300, y:-100, delay:delay*150}} out:fade|global={{duration:300}} -->
  <!-- transition:fly|global={{duration:200, y:-50, delay:delay*150}} -->
   <!-- transition:blur|global={{duration:200}} -->
-<article transition:fly|global={{duration:200, y:-30, delay:delay*150}}>
+<article in:fly|global={{duration:200, y:-20, delay:delay*70}}>
     <div class="title">
         <h1 class="word">{e.word}</h1>
 
         <Icon
             fill={starred ? 1 : 0}
-            wgth={starred ? 400 : 200}
-            size={28}
+            hover_fill
+            to_fill={starred ? 0 : 1}
+            wgth={300}
+            size={32}
             tabindex={0}
             title="Favorite this word"
             on:click={() => {
                 Star(e.word);
             }}
-            style="color: var({starred ? '--g1' : '--g4'})"
+            style="align-self: flex-start;color: var(--{starred ? 'g1' : 'g2'});"
         >
             star
+        </Icon>
+
+        <!-- svelte-ignore event_directive_deprecated -->
+        <Icon
+            fill={0}
+            hover_fill
+            to_fill={1}
+            wgth={300}
+            size={28}
+            tabindex={0}
+            title="Left click: copy as plain text | Right click: copy as markdown"
+            on:click={() => copyToClipboard(false)}
+            on:contextmenu={(ev) => { ev.preventDefault(); ev.stopPropagation(); copyToClipboard(true); }}
+            style="color: var(--g2);"
+        >
+            content_copy
         </Icon>
     </div>
 

@@ -16,7 +16,8 @@
     style="font-size:{size}px;--f:{fill};--f_h:{to_fill}; --w:{wgth};--w_h:{to_wgth}; --g:{grad};--g_h:{to_grad}; --o:{opsz};--o_h:{to_opsz};{style}"
     {title}
     {tabindex}
-    on:click|stopPropagation>
+    on:click|stopPropagation
+    on:contextmenu|stopPropagation|preventDefault>
     <slot></slot>
 </span>
 

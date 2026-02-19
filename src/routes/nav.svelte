@@ -10,6 +10,7 @@
 
     function ChangeTheme() {
         dark_mode = !dark_mode;
+        localStorage.setItem('dark_mode', JSON.stringify(dark_mode));
         document.documentElement.setAttribute(
             "theme",
             dark_mode === true ? "dark" : "light",
@@ -19,9 +20,28 @@
     function ChangeLang(){
         lang += 1;
         if(lang > langs.length - 1) lang = 0;
+        localStorage.setItem('lang', JSON.stringify(lang));
     }
 
     onMount(() =>{
+        // Load settings from localStorage
+        const savedDarkMode = localStorage.getItem('dark_mode');
+        if (savedDarkMode !== null) {
+            dark_mode = JSON.parse(savedDarkMode);
+            document.documentElement.setAttribute(
+                "theme",
+                dark_mode === true ? "dark" : "light",
+            );
+        }
+        
+        const savedLang = localStorage.getItem('lang');
+        if (savedLang !== null) {
+            const parsedLang = JSON.parse(savedLang);
+            if (parsedLang >= 0 && parsedLang < langs.length) {
+                lang = parsedLang;
+            }
+        }
+
         const searchInput = document.getElementById('search');
         if (searchInput) {
             searchInput.focus();

@@ -229,3 +229,57 @@ pub fn search_wordnet(query: &str, language_code: &str, max_results: usize) -> V
     }
     Vec::new()
 }
+
+/// Efficiently get the first definition for multiple words without fuzzy matching.
+/// Returns a HashMap of word -> first definition (or empty string if not found).
+#[tauri::command]
+pub fn get_first_definitions(words: Vec<String>, language_code: &str) -> HashMap<String, String> {
+    let mut result: HashMap<String, String> = HashMap::new();
+    
+    if let Some(searchers_mutex) = WORDNET_SEARCHERS.get() {
+        if let Ok(searchers) = searchers_mutex.lock() {
+            if let Some(searcher) = searchers.get(language_code) {
+                for word in words {
+                    if let Some(entry) = searcher.wordnet.words.get(&word) {
+                        // Try to find the first definition from any POS
+                        let first_def = get_first_def_from_entry(entry, &searcher.wordnet.synsets);
+                        result.insert(word, first_def.unwrap_or_default());
+                    } else {
+                        result.insert(word, String::new());
+                    }
+                }
+            }
+        }
+    }
+    
+    result
+}
+
+/// Helper function to get the first definition from a word entry
+fn get_first_def_from_entry(entry: &WordEntry, synsets: &HashMap<String, Synset>) -> Option<String> {
+    // Check each POS in order of common usage
+    let pos_fields: [&Option<Vec<String>>; 8] = [
+        &entry.n, // noun
+        &entry.v, // verb
+        &entry.a, // adjective
+        &entry.r, // adverb
+        &entry.s, // adj satellite
+        &entry.p, // pronoun
+        &entry.x, // other
+        &entry.u, // unknown
+    ];
+    
+    for synset_ids_opt in pos_fields {
+        if let Some(synset_ids) = synset_ids_opt {
+            for synset_id in synset_ids {
+                if let Some(synset) = synsets.get(synset_id) {
+                    if let Some(first_def) = synset.defs.first() {
+                        return Some(first_def.clone());
+                    }
+                }
+            }
+        }
+    }
+    
+    None
+}
