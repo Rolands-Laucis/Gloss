@@ -4,12 +4,23 @@
     
     import Icon from "$lib/Icon.svelte";
     
-    let {e, search = $bindable(), starred, langs, lang, Star, delay, addSenseToEntry} = $props();
+    let {e, search = $bindable(), starred, langs, lang, Star, delay, addSenseToEntry, deleteEntry, deleteSense} = $props();
 
     // Add sense form state
     let showAddSenseForm = $state(false);
     let newSenseDefinition = $state("");
     let newSensePos = $state("n");
+
+    // Calculate the index of a sense within its POS category
+    function getPosIndex(senseIndex, pos) {
+        let posCount = 0;
+        for (let i = 0; i < senseIndex; i++) {
+            if (e.senses[i].pos === pos) {
+                posCount++;
+            }
+        }
+        return posCount;
+    }
 
     function copyToClipboard(asMarkdown = false) {
         let text = '';
@@ -105,6 +116,21 @@
         >
             add
         </Icon>
+
+        <!-- svelte-ignore event_directive_deprecated -->
+        <Icon
+            fill={0}
+            hover_fill
+            to_fill={1}
+            wgth={300}
+            size={28}
+            tabindex={0}
+            title="Delete this entire entry"
+            on:click={() => deleteEntry(e.word)}
+            style="color: var(--g2);"
+        >
+            delete
+        </Icon>
     </div>
 
     {#if showAddSenseForm}
@@ -156,12 +182,28 @@
         </section>
     {/if}
 
-    {#each e.senses as sense}
+    {#each e.senses as sense, senseIndex}
         <section>
-            <small 
-                title={POS_tags[langs[lang]][sense.pos].desc}>
-                    {POS_tags[langs[lang]][sense.pos].long} ~{sense.match_score}
+            <div class="sense-title">
+                <small 
+                    title={POS_tags[langs[lang]][sense.pos].desc}>
+                        {POS_tags[langs[lang]][sense.pos].long} ~{sense.match_score}
                 </small>
+                <!-- svelte-ignore event_directive_deprecated -->
+                <Icon
+                    fill={0}
+                    hover_fill
+                    to_fill={1}
+                    wgth={300}
+                    size={16}
+                    tabindex={0}
+                    title="Delete this sense"
+                    on:click={() => deleteSense(e.word, sense.pos, getPosIndex(senseIndex, sense.pos))}
+                    style="color: var(--g3);"
+                >
+                    delete
+                </Icon>
+            </div>
 
             {#if sense?.definitions.length}
                 {#each sense.definitions as d}
@@ -308,6 +350,12 @@
         & > p{
             margin-left: $s-2;
             padding-right: $s-03;
+        }
+
+        .sense-title {
+            display: flex;
+            align-items: center;
+            gap: $s-02;
         }
 
         .block{

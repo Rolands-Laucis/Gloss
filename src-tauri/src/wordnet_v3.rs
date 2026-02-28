@@ -419,3 +419,151 @@ fn uuid_simple() -> String {
         .unwrap_or_default();
     format!("{:x}{:x}", duration.as_secs(), duration.subsec_nanos())
 }
+
+/// Delete an entire word entry from the wordnet
+#[tauri::command]
+pub fn delete_word_entry(
+    word: String,
+    language_code: &str,
+    file_path: &str,
+) -> Result<(), String> {
+    if let Some(searchers_mutex) = WORDNET_SEARCHERS.get() {
+        if let Ok(mut searchers) = searchers_mutex.lock() {
+            if let Some(searcher) = searchers.get_mut(language_code) {
+                // Check if word exists
+                if !searcher.wordnet.words.contains_key(&word) {
+                    return Err(format!("Word '{}' not found", word));
+                }
+                
+                // Get all synset IDs associated with this word
+                let entry = searcher.wordnet.words.get(&word).unwrap();
+                let mut synset_ids_to_check: Vec<String> = Vec::new();
+                
+                if let Some(ids) = &entry.p { synset_ids_to_check.extend(ids.clone()); }
+                if let Some(ids) = &entry.n { synset_ids_to_check.extend(ids.clone()); }
+                if let Some(ids) = &entry.u { synset_ids_to_check.extend(ids.clone()); }
+                if let Some(ids) = &entry.v { synset_ids_to_check.extend(ids.clone()); }
+                if let Some(ids) = &entry.x { synset_ids_to_check.extend(ids.clone()); }
+                if let Some(ids) = &entry.a { synset_ids_to_check.extend(ids.clone()); }
+                if let Some(ids) = &entry.r { synset_ids_to_check.extend(ids.clone()); }
+                if let Some(ids) = &entry.s { synset_ids_to_check.extend(ids.clone()); }
+                
+                // Remove word from words map
+                searcher.wordnet.words.remove(&word);
+                
+                // Update synset_to_words and remove orphaned synsets
+                for synset_id in synset_ids_to_check {
+                    if let Some(words) = searcher.synset_to_words.get_mut(&synset_id) {
+                        words.retain(|w| w != &word);
+                        // If no words reference this synset anymore, remove the synset
+                        if words.is_empty() {
+                            searcher.synset_to_words.remove(&synset_id);
+                            searcher.wordnet.synsets.remove(&synset_id);
+                        }
+                    }
+                }
+                
+                // Persist to file
+                let json = serde_json::to_string(&searcher.wordnet)
+                    .map_err(|e| format!("Failed to serialize: {}", e))?;
+                fs::write(file_path, json)
+                    .map_err(|e| format!("Failed to write file: {}", e))?;
+                
+                return Ok(());
+            }
+        }
+    }
+    Err("WordNet not initialized".to_string())
+}
+
+/// Delete a specific sense (synset) from a word
+#[tauri::command]
+pub fn delete_sense_from_word(
+    word: String,
+    pos: String,
+    synset_index: usize,
+    language_code: &str,
+    file_path: &str,
+) -> Result<(), String> {
+    if let Some(searchers_mutex) = WORDNET_SEARCHERS.get() {
+        if let Ok(mut searchers) = searchers_mutex.lock() {
+            if let Some(searcher) = searchers.get_mut(language_code) {
+                // Check if word exists
+                let entry = searcher.wordnet.words.get_mut(&word)
+                    .ok_or_else(|| format!("Word '{}' not found", word))?;
+                
+                // Get the synset ID to remove based on POS and index
+                let synset_id = {
+                    let synset_ids = match pos.as_str() {
+                        "p" => entry.p.as_ref(),
+                        "n" => entry.n.as_ref(),
+                        "u" => entry.u.as_ref(),
+                        "v" => entry.v.as_ref(),
+                        "x" => entry.x.as_ref(),
+                        "a" => entry.a.as_ref(),
+                        "r" => entry.r.as_ref(),
+                        "s" => entry.s.as_ref(),
+                        _ => return Err(format!("Invalid POS: {}", pos)),
+                    };
+                    
+                    synset_ids
+                        .and_then(|ids| ids.get(synset_index))
+                        .ok_or_else(|| format!("Sense index {} not found for POS '{}'", synset_index, pos))?
+                        .clone()
+                };
+                
+                // Remove the synset ID from the entry's POS field
+                let synset_ids_mut = match pos.as_str() {
+                    "p" => entry.p.as_mut(),
+                    "n" => entry.n.as_mut(),
+                    "u" => entry.u.as_mut(),
+                    "v" => entry.v.as_mut(),
+                    "x" => entry.x.as_mut(),
+                    "a" => entry.a.as_mut(),
+                    "r" => entry.r.as_mut(),
+                    "s" => entry.s.as_mut(),
+                    _ => return Err(format!("Invalid POS: {}", pos)),
+                };
+                
+                if let Some(ids) = synset_ids_mut {
+                    if synset_index < ids.len() {
+                        ids.remove(synset_index);
+                    }
+                }
+                
+                // Update synset_to_words and potentially remove orphaned synset
+                if let Some(words) = searcher.synset_to_words.get_mut(&synset_id) {
+                    words.retain(|w| w != &word);
+                    if words.is_empty() {
+                        searcher.synset_to_words.remove(&synset_id);
+                        searcher.wordnet.synsets.remove(&synset_id);
+                    }
+                }
+                
+                // Check if word entry is now empty and should be removed
+                let entry = searcher.wordnet.words.get(&word).unwrap();
+                let is_empty = entry.p.as_ref().map_or(true, |v| v.is_empty())
+                    && entry.n.as_ref().map_or(true, |v| v.is_empty())
+                    && entry.u.as_ref().map_or(true, |v| v.is_empty())
+                    && entry.v.as_ref().map_or(true, |v| v.is_empty())
+                    && entry.x.as_ref().map_or(true, |v| v.is_empty())
+                    && entry.a.as_ref().map_or(true, |v| v.is_empty())
+                    && entry.r.as_ref().map_or(true, |v| v.is_empty())
+                    && entry.s.as_ref().map_or(true, |v| v.is_empty());
+                
+                if is_empty {
+                    searcher.wordnet.words.remove(&word);
+                }
+                
+                // Persist to file
+                let json = serde_json::to_string(&searcher.wordnet)
+                    .map_err(|e| format!("Failed to serialize: {}", e))?;
+                fs::write(file_path, json)
+                    .map_err(|e| format!("Failed to write file: {}", e))?;
+                
+                return Ok(());
+            }
+        }
+    }
+    Err("WordNet not initialized".to_string())
+}

@@ -213,6 +213,50 @@
             alert("Error adding sense: " + err);
         }
     }
+
+    // Delete an entire word entry
+    async function deleteEntry(word) {
+        if (!confirm(`Are you sure you want to delete the entire entry for "${word}"?`)) {
+            return;
+        }
+        
+        try {
+            await invoke("delete_word_entry", {
+                word: word,
+                languageCode: langs[lang],
+                filePath: wordnetPaths[langs[lang]]
+            });
+            
+            // Trigger re-query to show updated results
+            queryVersion++;
+        } catch (err) {
+            if(!import.meta.env.PROD) log("Error deleting entry:", err);
+            alert("Error deleting entry: " + err);
+        }
+    }
+
+    // Delete a specific sense from a word
+    async function deleteSense(word, pos, senseIndex) {
+        if (!confirm(`Are you sure you want to delete this sense from "${word}"?`)) {
+            return;
+        }
+        
+        try {
+            await invoke("delete_sense_from_word", {
+                word: word,
+                pos: pos,
+                synsetIndex: senseIndex,
+                languageCode: langs[lang],
+                filePath: wordnetPaths[langs[lang]]
+            });
+            
+            // Trigger re-query to show updated results
+            queryVersion++;
+        } catch (err) {
+            if(!import.meta.env.PROD) log("Error deleting sense:", err);
+            alert("Error deleting sense: " + err);
+        }
+    }
 </script>
 
 <main>
@@ -282,7 +326,7 @@
                 {:then entries}
                     {#each entries as e, i}
                         {@const starred = stars.includes(e.word)}
-                        <Entry {e} {starred} {langs} {lang} bind:search={search} {Star} delay={i} {addSenseToEntry}></Entry>
+                        <Entry {e} {starred} {langs} {lang} bind:search={search} {Star} delay={i} {addSenseToEntry} {deleteEntry} {deleteSense}></Entry>
                     {/each}
                 {:catch error}
                     <p>Error:</p>
