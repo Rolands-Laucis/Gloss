@@ -283,3 +283,139 @@ fn get_first_def_from_entry(entry: &WordEntry, synsets: &HashMap<String, Synset>
     
     None
 }
+
+/// Add a new word entry with a single sense to the wordnet
+#[tauri::command]
+pub fn add_word_entry(
+    word: String,
+    pos: String,
+    definition: String,
+    language_code: &str,
+    file_path: &str,
+) -> Result<(), String> {
+    if let Some(searchers_mutex) = WORDNET_SEARCHERS.get() {
+        if let Ok(mut searchers) = searchers_mutex.lock() {
+            if let Some(searcher) = searchers.get_mut(language_code) {
+                // Generate a unique synset ID
+                let synset_id = format!("custom-{}-{}", word.replace(' ', "_"), uuid_simple());
+                
+                // Create the new synset
+                let new_synset = Synset {
+                    defs: vec![definition],
+                    ex: vec![],
+                    syns: vec![],
+                    ants: vec![],
+                };
+                
+                // Add synset to wordnet
+                searcher.wordnet.synsets.insert(synset_id.clone(), new_synset);
+                
+                // Add or update word entry
+                let entry = searcher.wordnet.words.entry(word.clone()).or_insert_with(|| WordEntry {
+                    p: None, n: None, u: None, v: None, x: None, a: None, r: None, s: None,
+                });
+                
+                // Add synset ID to the appropriate POS field
+                match pos.as_str() {
+                    "p" => entry.p.get_or_insert_with(Vec::new).push(synset_id.clone()),
+                    "n" => entry.n.get_or_insert_with(Vec::new).push(synset_id.clone()),
+                    "u" => entry.u.get_or_insert_with(Vec::new).push(synset_id.clone()),
+                    "v" => entry.v.get_or_insert_with(Vec::new).push(synset_id.clone()),
+                    "x" => entry.x.get_or_insert_with(Vec::new).push(synset_id.clone()),
+                    "a" => entry.a.get_or_insert_with(Vec::new).push(synset_id.clone()),
+                    "r" => entry.r.get_or_insert_with(Vec::new).push(synset_id.clone()),
+                    "s" => entry.s.get_or_insert_with(Vec::new).push(synset_id.clone()),
+                    _ => return Err(format!("Invalid POS: {}", pos)),
+                }
+                
+                // Update reverse mapping
+                searcher.synset_to_words
+                    .entry(synset_id)
+                    .or_insert_with(Vec::new)
+                    .push(word);
+                
+                // Persist to file
+                let json = serde_json::to_string(&searcher.wordnet)
+                    .map_err(|e| format!("Failed to serialize: {}", e))?;
+                fs::write(file_path, json)
+                    .map_err(|e| format!("Failed to write file: {}", e))?;
+                
+                return Ok(());
+            }
+        }
+    }
+    Err("WordNet not initialized".to_string())
+}
+
+/// Add a new sense (definition) to an existing word
+#[tauri::command]
+pub fn add_sense_to_word(
+    word: String,
+    pos: String,
+    definition: String,
+    language_code: &str,
+    file_path: &str,
+) -> Result<(), String> {
+    if let Some(searchers_mutex) = WORDNET_SEARCHERS.get() {
+        if let Ok(mut searchers) = searchers_mutex.lock() {
+            if let Some(searcher) = searchers.get_mut(language_code) {
+                // Check if word exists
+                if !searcher.wordnet.words.contains_key(&word) {
+                    return Err(format!("Word '{}' not found", word));
+                }
+                
+                // Generate a unique synset ID
+                let synset_id = format!("custom-{}-{}", word.replace(' ', "_"), uuid_simple());
+                
+                // Create the new synset
+                let new_synset = Synset {
+                    defs: vec![definition],
+                    ex: vec![],
+                    syns: vec![],
+                    ants: vec![],
+                };
+                
+                // Add synset to wordnet
+                searcher.wordnet.synsets.insert(synset_id.clone(), new_synset);
+                
+                // Get the word entry and add synset ID to the appropriate POS field
+                let entry = searcher.wordnet.words.get_mut(&word).unwrap();
+                match pos.as_str() {
+                    "p" => entry.p.get_or_insert_with(Vec::new).push(synset_id.clone()),
+                    "n" => entry.n.get_or_insert_with(Vec::new).push(synset_id.clone()),
+                    "u" => entry.u.get_or_insert_with(Vec::new).push(synset_id.clone()),
+                    "v" => entry.v.get_or_insert_with(Vec::new).push(synset_id.clone()),
+                    "x" => entry.x.get_or_insert_with(Vec::new).push(synset_id.clone()),
+                    "a" => entry.a.get_or_insert_with(Vec::new).push(synset_id.clone()),
+                    "r" => entry.r.get_or_insert_with(Vec::new).push(synset_id.clone()),
+                    "s" => entry.s.get_or_insert_with(Vec::new).push(synset_id.clone()),
+                    _ => return Err(format!("Invalid POS: {}", pos)),
+                }
+                
+                // Update reverse mapping
+                searcher.synset_to_words
+                    .entry(synset_id)
+                    .or_insert_with(Vec::new)
+                    .push(word);
+                
+                // Persist to file
+                let json = serde_json::to_string(&searcher.wordnet)
+                    .map_err(|e| format!("Failed to serialize: {}", e))?;
+                fs::write(file_path, json)
+                    .map_err(|e| format!("Failed to write file: {}", e))?;
+                
+                return Ok(());
+            }
+        }
+    }
+    Err("WordNet not initialized".to_string())
+}
+
+/// Simple UUID generator for unique IDs
+fn uuid_simple() -> String {
+    use std::time::{SystemTime, UNIX_EPOCH};
+    let duration = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default();
+    format!("{:x}{:x}", duration.as_secs(), duration.subsec_nanos())
+}

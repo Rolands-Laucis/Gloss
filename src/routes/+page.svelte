@@ -4,10 +4,12 @@
     import { getCurrentWindow } from "@tauri-apps/api/window";
     import {log} from '$lib/shared.js'
     import { readTextFile, writeTextFile, exists, create } from '@tauri-apps/plugin-fs';
+    import { slide } from 'svelte/transition';
 
     import Nav from "./nav.svelte";
     import Entry from "./entry.svelte";
     import Icon from "$lib/Icon.svelte";
+    import { POS_tags } from './pos_tags.js';
 
     let search = $state(""),
     /**
@@ -29,7 +31,20 @@
      */
     let definitionsCache = $state({});
 
-    const langs = ['en', 'lv']
+    const langs = ['en', 'lv'];
+    const wordnetPaths = {
+        'en': 'resources/en_wordnet_lmf_2024.json',
+        'lv': 'resources/lv_wordnet_lmf_2025.json'
+    };
+
+    // Manual entry form state
+    let showAddEntryForm = $state(false);
+    let newEntryWord = $state("");
+    let newEntryDefinition = $state("");
+    let newEntryPos = $state("n");
+
+    // Re-query trigger
+    let queryVersion = $state(0);
 
     onMount(async () => {
         if(!await exists(import.meta.env.VITE_stars)) {
@@ -153,6 +168,51 @@
         writeTextFile(import.meta.env.VITE_stars, JSON.stringify(stars));
         // console.log({stars});
     }
+
+    // Add a new word entry
+    async function addNewEntry() {
+        if (!search.trim() || !newEntryDefinition.trim()) return;
+        
+        try {
+            await invoke("add_word_entry", {
+                word: search.trim().toLowerCase(),
+                pos: newEntryPos,
+                definition: newEntryDefinition.trim(),
+                languageCode: langs[lang],
+                filePath: wordnetPaths[langs[lang]]
+            });
+            
+            // Trigger re-query to show updated results
+            queryVersion++;
+            
+            // Reset form
+            newEntryDefinition = "";
+            newEntryPos = "n";
+            showAddEntryForm = false;
+        } catch (err) {
+            if(!import.meta.env.PROD) log("Error adding entry:", err);
+            alert("Error adding entry: " + err);
+        }
+    }
+
+    // Add a new sense to an existing word
+    async function addSenseToEntry(word, pos, definition) {
+        try {
+            await invoke("add_sense_to_word", {
+                word: word,
+                pos: pos,
+                definition: definition,
+                languageCode: langs[lang],
+                filePath: wordnetPaths[langs[lang]]
+            });
+            
+            // Trigger re-query to show updated results
+            queryVersion++;
+        } catch (err) {
+            if(!import.meta.env.PROD) log("Error adding sense:", err);
+            alert("Error adding sense: " + err);
+        }
+    }
 </script>
 
 <main>
@@ -160,17 +220,75 @@
 
     <aside>
         {#if search}
-            {#await Query(search)}
-                <!-- <small>searching...</small> -->
-            {:then entries}
-                {#each entries as e, i}
-                    {@const starred = stars.includes(e.word)}
-                    <Entry {e} {starred} {langs} {lang} bind:search={search} {Star} delay={i}></Entry>
-                {/each}
-            {:catch error}
-                <p>Error:</p>
-                <p>{error}</p>
-            {/await}
+            <!-- Add new entry bar -->
+            <div class="add-entry-bar">
+                {#if !showAddEntryForm}
+                    <button class="add-entry-toggle" on:click={() => showAddEntryForm = true}>
+                        <Icon fill={0} wgth={300} size={16} inert>add</Icon>
+                        <span>Add new entry for "{search}"</span>
+                    </button>
+                {:else}
+                    <article class="add-entry-form">
+                        <div class="title">
+                            <Icon
+                                fill={0}
+                                hover_fill
+                                to_fill={1}
+                                wgth={300}
+                                size={28}
+                                tabindex={0}
+                                title="Add entry"
+                                on:click={addNewEntry}
+                                style="color: #4C4C4C;"
+                            >
+                                check
+                            </Icon>
+                            |
+                            <Icon
+                                fill={0}
+                                hover_fill
+                                to_fill={1}
+                                wgth={300}
+                                size={28}
+                                tabindex={0}
+                                title="Cancel"
+                                on:click={() => showAddEntryForm = false}
+                                style="color: #4C4C4C;"
+                            >
+                                close
+                            </Icon>
+                            |
+                            <select bind:value={newEntryPos} class="pos-select">
+                                {#each Object.entries(POS_tags[langs[lang]]) as [key, value]}
+                                    <option value={key}>{value.long}</option>
+                                {/each}
+                            </select>
+                        </div>
+
+                        <textarea 
+                            placeholder="Definition..." 
+                            bind:value={newEntryDefinition}
+                            class="def-input"
+                            rows="2"
+                        ></textarea>
+                        <div class="line"></div>
+                    </article>
+                {/if}
+            </div>
+
+            {#key queryVersion}
+                {#await Query(search)}
+                    <!-- <small>searching...</small> -->
+                {:then entries}
+                    {#each entries as e, i}
+                        {@const starred = stars.includes(e.word)}
+                        <Entry {e} {starred} {langs} {lang} bind:search={search} {Star} delay={i} {addSenseToEntry}></Entry>
+                    {/each}
+                {:catch error}
+                    <p>Error:</p>
+                    <p>{error}</p>
+                {/await}
+            {/key}
         {:else}
             <div class="sides">
                 <article class="half">
@@ -180,8 +298,7 @@
                             <!-- svelte-ignore a11y_click_events_have_key_events -->
                             <!-- svelte-ignore a11y_no_static_element_interactions -->
                             <!-- svelte-ignore a11y_missing_attribute -->
-                            <!-- svelte-ignore event_directive_deprecated -->
-                            <a on:click|preventDefault={() => (search = star)} title={definitionsCache[star] || ""}>{star}</a>
+                            <a on:click={(e) => { e.preventDefault(); search = star; }} title={definitionsCache[star] || ""}>{star}</a>
                             <Icon
                                 fill={1}
                                 wgth={400}
@@ -204,8 +321,7 @@
                             <!-- svelte-ignore a11y_click_events_have_key_events -->
                             <!-- svelte-ignore a11y_no_static_element_interactions -->
                             <!-- svelte-ignore a11y_missing_attribute -->
-                            <!-- svelte-ignore event_directive_deprecated -->
-                            <a on:click|preventDefault={() => (search = recent)} title={definitionsCache[recent] || ""}>{recent}</a>
+                            <a on:click={(e) => { e.preventDefault(); search = recent; }} title={definitionsCache[recent] || ""}>{recent}</a>
                             <Icon
                                 fill={starred ? 1 : 0}
                                 wgth={400}
@@ -265,5 +381,95 @@
         display: flex;
         align-items: center;
         gap: $s-03;
+    }
+
+    .add-entry-bar {
+        width: 100%;
+    }
+
+    .add-entry-toggle {
+        display: flex;
+        align-items: center;
+        gap: $s-03;
+        padding: $s-03 $s-1;
+        background: transparent;
+        border: 1px dashed $g4;
+        border-radius: 4px;
+        color: $g3;
+        cursor: pointer;
+        font-size: 0.85rem;
+        width: 100%;
+        justify-content: center;
+
+        &:hover {
+            border-color: $g2;
+            color: $g2;
+        }
+    }
+
+    .add-entry-form {
+        width: 100%;
+        max-width: 100%;
+        display: flex;
+        flex-direction: column;
+
+        & > *:not(:last-child) {
+            margin-bottom: $s-2;
+        }
+
+        .title {
+            margin-bottom: $s-01 !important;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: $s-02;
+        }
+
+        .word {
+            margin-bottom: $s-03;
+        }
+
+        section {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: $s-03;
+        }
+
+        .pos-select {
+            width: fit-content;
+            padding: $s-03 $s-02;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid $g4;
+            border-radius: 0;
+            color: $g1;
+            font-size: 0.85rem;
+            cursor: pointer;
+
+            &:focus {
+                border-color: $g2;
+                outline: none;
+            }
+        }
+
+        .def-input {
+            background: transparent;
+            border: none;
+            color: $l;
+            font-family: inherit;
+            resize: vertical;
+            font-size: var(--s-1, 14px);
+
+            &::placeholder {
+                color: $g3;
+            }
+        }
+
+        .line {
+            height: 1px;
+            width: 100%;
+            background: $g5;
+        }
     }
 </style>

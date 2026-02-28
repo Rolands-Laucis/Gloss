@@ -8,7 +8,7 @@
 // mod wordnet_v2;
 // use wordnet_v2::{initialize_wordnet_index, search_words};
 mod wordnet_v3;
-use wordnet_v3::{init_wordnet, search_wordnet, get_first_definitions};
+use wordnet_v3::{init_wordnet, search_wordnet, get_first_definitions, add_word_entry, add_sense_to_word};
 
 fn main() {
     // Initialize once at startup
@@ -19,7 +19,7 @@ fn main() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_fs::init())
-        .invoke_handler(tauri::generate_handler![search_wordnet, get_first_definitions])
+        .invoke_handler(tauri::generate_handler![search_wordnet, get_first_definitions, add_word_entry, add_sense_to_word])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

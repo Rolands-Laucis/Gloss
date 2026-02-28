@@ -4,7 +4,12 @@
     
     import Icon from "$lib/Icon.svelte";
     
-    let {e, search = $bindable(), starred, langs, lang, Star, delay} = $props();
+    let {e, search = $bindable(), starred, langs, lang, Star, delay, addSenseToEntry} = $props();
+
+    // Add sense form state
+    let showAddSenseForm = $state(false);
+    let newSenseDefinition = $state("");
+    let newSensePos = $state("n");
 
     function copyToClipboard(asMarkdown = false) {
         let text = '';
@@ -33,6 +38,17 @@
             });
         }
         navigator.clipboard.writeText(text.trim());
+    }
+
+    async function handleAddSense() {
+        if (!newSenseDefinition.trim()) return;
+        
+        await addSenseToEntry(e.word, newSensePos, newSenseDefinition.trim());
+        
+        // Reset form
+        newSenseDefinition = "";
+        newSensePos = "n";
+        showAddSenseForm = false;
     }
 </script>
 
@@ -74,7 +90,71 @@
         >
             content_copy
         </Icon>
+
+        <!-- svelte-ignore event_directive_deprecated -->
+        <Icon
+            fill={0}
+            hover_fill
+            to_fill={1}
+            wgth={300}
+            size={28}
+            tabindex={0}
+            title="Add a new sense to this word"
+            on:click={() => showAddSenseForm = !showAddSenseForm}
+            style="color: var(--{showAddSenseForm ? 'g1' : 'g2'});"
+        >
+            add
+        </Icon>
     </div>
+
+    {#if showAddSenseForm}
+        <section class="add-sense-form" transition:slide={{duration: 150}}>
+            <div class="sense-header">
+                
+                <!-- svelte-ignore event_directive_deprecated -->
+                <Icon
+                    fill={0}
+                    hover_fill
+                    to_fill={1}
+                    wgth={300}
+                    size={22}
+                    tabindex={0}
+                    title="Add sense"
+                    on:click={handleAddSense}
+                    style="color: #4C4C4C;"
+                >
+                    check
+                </Icon>
+                |
+                <!-- svelte-ignore event_directive_deprecated -->
+                <Icon
+                    fill={0}
+                    hover_fill
+                    to_fill={1}
+                    wgth={300}
+                    size={22}
+                    tabindex={0}
+                    title="Cancel"
+                    on:click={() => showAddSenseForm = false}
+                    style="color: #4C4C4C;"
+                >
+                    close
+                </Icon>
+                |
+                <select bind:value={newSensePos} class="pos-select">
+                    {#each Object.entries(POS_tags[langs[lang]]) as [key, value]}
+                        <option value={key}>{value.long}</option>
+                    {/each}
+                </select>
+            </div>
+            <textarea 
+                placeholder="New definition..." 
+                bind:value={newSenseDefinition}
+                class="def-input"
+                rows="2"
+            ></textarea>
+        </section>
+    {/if}
 
     {#each e.senses as sense}
         <section>
@@ -164,6 +244,51 @@
     .word {
         margin-bottom: $s-03;
     }
+
+    .add-sense-form {
+        width: 100%;
+        max-width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: $s-03;
+
+        .sense-header {
+            display: flex;
+            align-items: center;
+            gap: $s-02;
+        }
+
+        .pos-select {
+            width: fit-content;
+            padding: $s-03 $s-02;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid $g4;
+            border-radius: 0;
+            color: $g1;
+            font-size: 0.85rem;
+            cursor: pointer;
+
+            &:focus {
+                border-color: $g2;
+                outline: none;
+            }
+        }
+
+        .def-input {
+            background: transparent;
+            border: none;
+            color: $l;
+            font-family: inherit;
+            resize: vertical;
+            font-size: var(--s-1, 14px);
+
+            &::placeholder {
+                color: $g3;
+            }
+        }
+    }
+
     section {
         width: 100%;
         max-width: 100%;
